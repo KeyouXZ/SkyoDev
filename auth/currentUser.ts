@@ -3,21 +3,17 @@ import { getUserFromSession, UserSession } from './core/session';
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
-import { getRoleNames, hasRole, hasAnyRole, RoleKey } from '@/types/roles';
+import { getRoleNames, RoleKey } from '@/types/roles';
 
 export type FullUser = Exclude<
   Awaited<ReturnType<typeof getUserFromDb>>,
   undefined | null
 > & {
   roles: RoleKey[];
-  hasRole: (requiredRole: number) => boolean;
-  hasAnyRole: (...roles: number[]) => boolean;
 };
 
 export type CurrentUser = UserSession & {
   roles: RoleKey[];
-  hasRole: (requiredRole: number) => boolean;
-  hasAnyRole: (...roles: number[]) => boolean;
 };
 
 function _getCurrentUser(options: {
@@ -66,16 +62,12 @@ async function _getCurrentUser({
     return {
       ...fullUser,
       roles: getRoleNames(fullUser.role),
-      hasRole: (req: number) => hasRole(fullUser.role, req),
-      hasAnyRole: (...roles: number[]) => hasAnyRole(fullUser.role, ...roles),
     };
   }
 
   return {
     ...sessionUser,
     roles: getRoleNames(sessionUser.role),
-    hasRole: (req: number) => hasRole(sessionUser.role, req),
-    hasAnyRole: (...roles: number[]) => hasAnyRole(sessionUser.role, ...roles),
   };
 }
 
