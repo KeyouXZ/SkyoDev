@@ -1,69 +1,485 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useSyncExternalStore } from 'react';
+import {
+  LayoutDashboard,
+  Box,
+  Layers,
+  ShoppingBag,
+  ScanLine,
+  Lightbulb,
+  ShoppingCart,
+  Search,
+  Bell,
+  HelpCircle,
+  User as UserIcon,
+  ChevronDown,
+  AlertTriangle,
+  DollarSign,
+  TrendingUp,
+  LineChart as LineChartIcon,
+  Check,
+  X,
+  Menu
+} from 'lucide-react';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip
+} from 'recharts';
+
+const emptySubscribe = () => () => {};
+
+function useMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
+// Dummy revenue data matching the screenshot exactly
+const salesData = [
+  { day: 'Sat', revenue: 0, label: '0' },
+  { day: 'Sun', revenue: 60, label: '60' },
+  { day: 'Mon', revenue: 120, label: '120' },
+  { day: 'Tue', revenue: 180, label: '180' },
+  { day: 'Wed', revenue: 240, label: '240' },
+  { day: 'Thu', revenue: 13.4, label: '13.4' },
+  { day: 'Today', revenue: 84.6, label: '84.6' },
+];
+
+// Custom Label component for chart points
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomPointLabel = (props: any) => {
+  const { x, y, value } = props;
+  if (value === undefined || value === null) return null;
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <text
+      x={x}
+      y={y - 10}
+      fill="#64748b"
+      fontSize={10.5}
+      fontWeight={500}
+      textAnchor="middle"
+      className="select-none"
+    >
+      {value}
+    </text>
+  );
+};
+
+export default function NiragaDashboard() {
+  const mounted = useMounted();
+  const [activeNav, setActiveNav] = useState('Dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showNotificationToast, setShowNotificationToast] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const navItems = [
+    { name: 'Dashboard', icon: LayoutDashboard },
+    { name: 'Inventory', icon: Box },
+    { name: 'Product Composition', icon: Layers },
+    { name: 'Sell Products', icon: ShoppingBag },
+    { name: 'Barcode Scanner', icon: ScanLine },
+    { name: 'AI Suggestions', icon: Lightbulb },
+    { name: 'Purchase Orders', icon: ShoppingCart },
+  ];
+
+  const quickActions = [
+    {
+      title: 'View AI Forecast',
+      subtitle: 'See reorder suggestions',
+      icon: TrendingUp,
+      iconBg: 'bg-[#cfe9f8] text-[#0284c7]',
+    },
+    {
+      title: 'View Sales Forecast',
+      subtitle: 'Project the next 30 days',
+      icon: LineChartIcon,
+      iconBg: 'bg-[#c7f0f6] text-[#0891b2]',
+    },
+    {
+      title: 'Sell Products',
+      subtitle: 'Record a sell',
+      icon: ShoppingBag,
+      iconBg: 'bg-[#d1fae5] text-[#10b981]',
+    },
+    {
+      title: 'Barcode Scanner',
+      subtitle: 'Scan to receive or sell',
+      icon: ScanLine,
+      iconBg: 'bg-[#ffedd5] text-[#f97316]',
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#ddf1f7] text-gray-800 p-3 sm:p-5 flex flex-col font-sans select-none antialiased">
+      <div className="flex flex-1 gap-5 w-full">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Left Sidebar */}
+        <aside
+          className={`
+            fixed top-3 bottom-3 left-3 z-50
+            lg:static lg:top-auto lg:bottom-auto lg:left-auto
+            w-60 sm:w-64 bg-[#00a2be] text-white
+            rounded-3xl shadow-lg flex flex-col justify-between py-6 px-4
+            transition-transform duration-300 ease-in-out
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          `}
+        >
+          <div>
+            {/* Logo / Brand Name */}
+            <div className="flex items-center justify-between px-2 pb-8 pt-2">
+              <h1 className="text-2xl font-black tracking-widest text-white select-none">
+                NIRAGA
+              </h1>
+              <button
+                className="p-1 text-white/80 hover:text-white lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Navigation List */}
+            <nav className="space-y-1.5">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeNav === item.name;
+
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => {
+                      setActiveNav(item.name);
+                      setSidebarOpen(false);
+                    }}
+                    className={`
+                      w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl font-medium text-sm
+                      transition-all duration-150 text-left cursor-pointer
+                      ${
+                        isActive
+                          ? 'bg-white font-semibold text-gray-800 shadow-sm'
+                          : 'text-white/95 hover:bg-white/10 hover:text-white'
+                      }
+                    `}
+                  >
+                    <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-gray-800' : 'text-white'}`} />
+                    <span className="truncate">{item.name}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Sidebar Footer info */}
+          <div className="border-t border-white/15 px-2 pt-6 text-xs text-white/70">
+            <p className="font-semibold text-white/90">Stock &amp; Inventory AI</p>
+            <p className="mt-0.5 text-xs text-white/60">v2.4.0 • NIRAGA Cloud</p>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex min-w-0 flex-1 flex-col">
+          {/* Top Bar / Header */}
+          <header className="flex items-center justify-between gap-3 rounded-2xl border border-white/60 bg-white/85 px-4 py-2.5 shadow-sm backdrop-blur-md">
+            {/* Left: Mobile Menu Trigger + Search Bar */}
+            <div className="flex flex-1 items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="rounded-full p-2 text-gray-700 hover:bg-slate-100 lg:hidden"
+                aria-label="Toggle menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+
+              <div className="relative max-w-md flex-1">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Pencarian"
+                  className="w-full rounded-full border-none bg-[#edf6fa] py-2 pl-10 pr-4 text-sm text-gray-800 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#00a2be]/30"
+                />
+              </div>
+            </div>
+
+            {/* Right: Notification, Help, and User Profile */}
+            <div className="relative flex shrink-0 items-center gap-2.5">
+              {/* Notification Bell */}
+              <button
+                onClick={() => setShowNotificationToast(!showNotificationToast)}
+                className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-gray-100 bg-white text-gray-600 shadow-xs transition-all hover:text-gray-900 hover:shadow-sm sm:h-10 sm:w-10"
+                aria-label="Notifications"
+              >
+                <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+              </button>
+
+              {/* Help Button */}
+              <button
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-gray-100 bg-white text-gray-600 shadow-xs transition-all hover:text-gray-900 hover:shadow-sm sm:h-10 sm:w-10"
+                aria-label="Help"
+              >
+                <HelpCircle className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+              </button>
+
+              {/* User Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex cursor-pointer items-center gap-2 rounded-full border border-gray-100 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 shadow-xs transition-all hover:shadow-sm sm:px-3.5 sm:text-sm"
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-gray-600">
+                    <UserIcon className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="font-semibold text-gray-700">Pengguna</span>
+                  <ChevronDown className={`h-3.5 w-3.5 text-gray-500 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {userDropdownOpen && (
+                  <div className="absolute right-0 z-50 mt-2 w-48 animate-in fade-in zoom-in-95 rounded-2xl border border-gray-100 bg-white py-1.5 text-sm shadow-lg duration-100">
+                    <div className="border-b border-gray-100 px-4 py-2">
+                      <p className="text-xs font-semibold text-gray-900">Admin Pengguna</p>
+                      <p className="truncate text-xs text-gray-500">admin@stockmind.net</p>
+                    </div>
+                    <button
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex w-full items-center justify-between px-4 py-2 text-left text-xs text-gray-700 hover:bg-slate-50"
+                    >
+                      Pengaturan Akun
+                    </button>
+                    <button
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex w-full items-center justify-between px-4 py-2 text-left text-xs text-red-600 hover:bg-slate-50"
+                    >
+                      Keluar
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Push Notification Preview Toast */}
+              {showNotificationToast && (
+                <div className="absolute right-0 top-12 z-50 w-72 animate-in fade-in slide-in-from-top-2 rounded-2xl border border-gray-100 bg-white p-3.5 text-xs shadow-xl duration-150">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2 font-semibold text-emerald-600">
+                      <Check className="h-4 w-4" />
+                      <span>Web Push Active</span>
+                    </div>
+                    <button
+                      onClick={() => setShowNotificationToast(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <p className="mt-1 text-gray-500">
+                    3 Low stock alerts recorded today. Restock suggestions are ready for review.
+                  </p>
+                </div>
+              )}
+            </div>
+          </header>
+
+          {/* Dashboard Title */}
+          <div className="mb-4 mt-5">
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+              Dashboard
+            </h2>
+          </div>
+
+          {/* 4 Stat Cards Grid */}
+          <div className="mb-5 grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+            {/* Card 1: Total Products */}
+            <div className="flex flex-col justify-between rounded-2xl border border-white/60 bg-[#e4f3fa] p-4 shadow-xs transition-all hover:shadow-sm sm:p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-800">Total Products</span>
+                <Box className="h-5 w-5 text-[#2563eb]" />
+              </div>
+              <div className="my-2.5">
+                <span className="text-3xl font-bold tracking-tight text-gray-900">15</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="font-semibold text-emerald-500">+ 12%</span>
+                <span className="text-gray-500">vs last month</span>
+              </div>
+            </div>
+
+            {/* Card 2: Low Stock Alerts */}
+            <div className="flex flex-col justify-between rounded-2xl border border-white/60 bg-[#e4f3fa] p-4 shadow-xs transition-all hover:shadow-sm sm:p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-800">Low Stock Alerts</span>
+                <AlertTriangle className="h-5 w-5 text-[#ef4444]" />
+              </div>
+              <div className="my-2.5">
+                <span className="text-3xl font-bold tracking-tight text-gray-900">3</span>
+              </div>
+              <div className="flex items-baseline gap-1.5 text-xs">
+                <span className="font-semibold leading-tight text-red-500">
+                  Requires attention
+                </span>
+                <span className="text-gray-500">vs last month</span>
+              </div>
+            </div>
+
+            {/* Card 3: Pending Orders */}
+            <div className="flex flex-col justify-between rounded-2xl border border-white/60 bg-[#e4f3fa] p-4 shadow-xs transition-all hover:shadow-sm sm:p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-800">Pending Orders</span>
+                <ShoppingCart className="h-5 w-5 text-gray-800" />
+              </div>
+              <div className="my-2.5">
+                <span className="text-3xl font-bold tracking-tight text-gray-900">2</span>
+              </div>
+              <div className="select-none text-xs text-transparent">
+                placeholder
+              </div>
+            </div>
+
+            {/* Card 4: Inventory Value */}
+            <div className="flex flex-col justify-between rounded-2xl border border-white/60 bg-[#e4f3fa] p-4 shadow-xs transition-all hover:shadow-sm sm:p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-800">Inventory Value</span>
+                <DollarSign className="h-5 w-5 text-[#10b981]" />
+              </div>
+              <div className="my-2.5">
+                <span className="text-3xl font-bold tracking-tight text-gray-900">$ 1,628.80</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="font-semibold text-emerald-500">+ 5.2%</span>
+                <span className="text-gray-500">vs last month</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Grid: Sales Overview Chart + Quick Actions */}
+          <div className="grid flex-1 grid-cols-1 items-start gap-5 lg:grid-cols-12">
+            {/* Left: Sales Overview Chart Section */}
+            <div className="flex flex-col rounded-3xl border border-white/60 bg-[#d8eff9] p-5 shadow-xs lg:col-span-8 sm:p-6">
+              <div className="mb-4">
+                <h3 className="text-xl font-bold tracking-tight text-gray-900">Sales Overview</h3>
+                <p className="mt-0.5 text-xs text-gray-500">Last 7 days revenue</p>
+              </div>
+
+              {/* White Inner Container with Recharts Line Chart */}
+              <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
+                <div className="h-64 w-full sm:h-72">
+                  {mounted ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={salesData}
+                        margin={{ top: 22, right: 24, left: -10, bottom: 5 }}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="#e5e7eb"
+                          vertical={true}
+                          horizontal={true}
+                        />
+                        <XAxis
+                          dataKey="day"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#64748b', fontSize: 11.5 }}
+                          dy={6}
+                        />
+                        <YAxis
+                          domain={[0, 300]}
+                          ticks={[0, 100, 200, 300]}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#64748b', fontSize: 11 }}
+                        />
+                        <Tooltip
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          formatter={(val: any) => [`$${Number(val ?? 0).toFixed(1)}`, 'Revenue']}
+                          contentStyle={{
+                            backgroundColor: '#ffffff',
+                            borderRadius: '12px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                            border: '1px solid #f1f5f9',
+                            fontSize: '12px',
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="revenue"
+                          stroke="#5f5bf6"
+                          strokeWidth={2.2}
+                          dot={{
+                            r: 4,
+                            fill: '#ffffff',
+                            stroke: '#5f5bf6',
+                            strokeWidth: 2,
+                          }}
+                          activeDot={{
+                            r: 6,
+                            fill: '#5f5bf6',
+                            stroke: '#ffffff',
+                            strokeWidth: 2,
+                          }}
+                          label={<CustomPointLabel />}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                      Loading chart...
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Quick Actions */}
+            <div className="flex flex-col justify-between lg:col-span-4">
+              <div className="mb-3 px-1">
+                <h3 className="text-xl font-bold tracking-tight text-gray-900">Quick Actions</h3>
+                <p className="mt-0.5 text-xs text-gray-500">Common tasks</p>
+              </div>
+
+              <div className="space-y-3">
+                {quickActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.title}
+                      className="group flex w-full cursor-pointer items-center gap-3.5 rounded-2xl border border-white/70 bg-linear-to-r from-[#d8eef9] to-[#cae7f7] p-3 px-4 text-left shadow-xs transition-all duration-150 hover:translate-x-0.5 hover:shadow-md"
+                    >
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs transition-transform group-hover:scale-105 ${action.iconBg}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="truncate text-sm font-semibold text-gray-900">
+                          {action.title}
+                        </h4>
+                        <p className="mt-0.5 truncate text-xs text-gray-500">
+                          {action.subtitle}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

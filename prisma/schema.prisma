@@ -1,0 +1,185 @@
+// Prisma schema for PostgreSQL database
+// Based on StockMind demo architecture with Bitwise Role/Permission system and PostgreSQL session store
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  password            String
+  firstName           String?
+  lastName            String?
+  name                String?
+  profileImageUrl     String?
+  role                Int       @default(1) // Bitwise integer representing user roles and permissions
+  stripeCustomerId    String?
+  stripeSubscriptionId String?
+  subscriptionStatus  String?   @default("trialing") // e.g. "active", "trialing", "canceled"
+  phoneNumber         String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  sessions            Session[]
+  products            Product[]
+  suppliers           Supplier[]
+  sales               Sale[]
+  reorderSuggestions  ReorderSuggestion[]
+  purchaseOrders      PurchaseOrder[]
+  productComponents   ProductComponent[]
+  subscribers         Subscriber[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Session {
+  id        String   @id // UUID session token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Int      // Cached bitwise role for fast permission verification
+  data      Json?    // Optional session metadata
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  auth      String
+  p256dh    String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Supplier {
+  id        Int       @id @default(autoincrement())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  products  Product[]
+
+  @@index([userId])
+}
+
+model Product {
+  id                 Int                 @id @default(autoincrement())
+  userId             String
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sku                String
+  name               String
+  description        String?
+  category           String?
+  price              Int                 // Price in cents
+  cost               Int                 // Cost in cents
+  stockLevel         Int                 @default(0)
+  reorderPoint       Int                 @default(10)
+  leadTimeDays       Int                 @default(7)
+  lastRestockDate    DateTime?
+  supplierId         Int?
+  supplier           Supplier?           @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  sales              Sale[]
+  reorderSuggestions ReorderSuggestion[]
+  purchaseOrderItems PurchaseOrderItem[]
+  parentComponents   ProductComponent[]  @relation("ParentProduct")
+  usedInComponents   ProductComponent[]  @relation("ComponentProduct")
+
+  @@unique([userId, sku])
+  @@index([userId])
+  @@index([supplierId])
+  @@index([sku])
+}
+
+model Sale {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  saleDate  DateTime @default(now())
+
+  @@index([userId])
+  @@index([productId])
+  @@index([saleDate])
+}
+
+model ReorderSuggestion {
+  id                Int      @id @default(autoincrement())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId         Int
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  suggestedQuantity Int
+  reason            String
+  status            String   @default("pending") // "pending", "approved", "rejected"
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+  @@index([productId])
+  @@index([status])
+}
+
+model PurchaseOrder {
+  id        Int                 @id @default(autoincrement())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String              @default("draft") // "draft", "sent", "received"
+  supplier  String?
+  notes     String?
+  createdAt DateTime            @default(now())
+  items     PurchaseOrderItem[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model PurchaseOrderItem {
+  id              Int           @id @default(autoincrement())
+  purchaseOrderId Int
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       Int
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity        Int
+
+  @@index([purchaseOrderId])
+  @@index([productId])
+}
+
+model ProductComponent {
+  id                 Int      @id @default(autoincrement())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentProductId    Int
+  parentProduct      Product  @relation("ParentProduct", fields: [parentProductId], references: [id], onDelete: Cascade)
+  componentProductId Int
+  componentProduct   Product  @relation("ComponentProduct", fields: [componentProductId], references: [id], onDelete: Cascade)
+  componentType      String   // "percentage" | "assembly"
+  quantity           Decimal  @db.Decimal(14, 4)
+  createdAt          DateTime @default(now())
+
+  @@unique([userId, parentProductId, componentProductId])
+  @@index([userId])
+  @@index([parentProductId])
+  @@index([componentProductId])
+}
