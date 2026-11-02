@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { version } from "@/package.json";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -49,12 +50,12 @@ export function Navigation({ sidebarOpen, setSidebarOpen }: NavigationProps) {
       {/* Left Sidebar */}
       <aside
         className={`
-      fixed top-3 bottom-3 left-3 z-50
+      fixed top-3 bottom-3 z-50
       lg:static lg:top-auto lg:bottom-auto lg:left-auto
       w-60 sm:w-64 bg-[#00a2be] text-white
       rounded-3xl shadow-lg flex flex-col justify-between py-6 px-4
       transition-transform duration-300 ease-in-out
-      ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+      ${sidebarOpen ? "translate-x-0 left-3" : "-translate-x-full lg:translate-x-0 left-0"}
     `}
       >
         <div>
@@ -78,8 +79,9 @@ export function Navigation({ sidebarOpen, setSidebarOpen }: NavigationProps) {
               const isActive = isActiveItem(item.href);
 
               return (
-                <button
+                <Link
                   key={item.name}
+                  href={item.href}
                   onClick={() => {
                     setSidebarOpen(false);
                   }}
@@ -97,7 +99,7 @@ export function Navigation({ sidebarOpen, setSidebarOpen }: NavigationProps) {
                     className={`h-5 w-5 shrink-0 ${isActive ? "text-gray-800" : "text-white"}`}
                   />
                   <span className="truncate">{item.name}</span>
-                </button>
+                </Link>
               );
             })}
           </nav>
