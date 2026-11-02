@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/auth/currentUser';
-import { prisma } from '@/lib/prisma';
-import { sendPushNotifications } from '@/lib/notification';
-import { z } from 'zod';
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/auth/currentUser";
+import { prisma } from "@/lib/prisma";
+import { sendPushNotifications } from "@/lib/notification";
+import { z } from "zod";
 
 const SendNotificationSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(100),
-  body: z.string().min(1, 'Body is required').max(300),
+  title: z.string().min(1, "Title is required").max(100),
+  body: z.string().min(1, "Body is required").max(300),
   icon: z.string().optional(),
   url: z.string().optional(),
   userId: z.string().optional(),
@@ -20,14 +20,25 @@ const SendNotificationSchema = z.object({
  * - Active push subscribers count
  */
 export async function GET() {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     // 1. Fetch low stock products (stockLevel <= reorderPoint)
-    const lowStockProducts = await prisma.$queryRaw<Array<{ id: number; name: string; sku: string; stockLevel: number; reorderPoint: number }>>`
+    const lowStockProducts = await prisma.$queryRaw<
+      Array<{
+        id: number;
+        name: string;
+        sku: string;
+        stockLevel: number;
+        reorderPoint: number;
+      }>
+    >`
       SELECT id, name, sku, "stockLevel", "reorderPoint"
       FROM "Product"
       WHERE "userId" = ${user.id} AND "stockLevel" <= "reorderPoint"
@@ -38,7 +49,7 @@ export async function GET() {
     const pendingSuggestions = await prisma.reorderSuggestion.findMany({
       where: {
         userId: user.id,
-        status: 'pending',
+        status: "pending",
       },
       include: {
         product: {
@@ -49,7 +60,7 @@ export async function GET() {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 10,
     });
 
@@ -75,8 +86,11 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error fetching notification alerts:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error fetching notification alerts:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -85,22 +99,31 @@ export async function GET() {
  * Broadcast or send a push notification (SKT-style web push).
  */
 export async function POST(req: Request) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const contentType = req.headers.get('content-type');
-    if (!contentType?.includes('application/json')) {
-      return NextResponse.json({ error: 'Invalid content type' }, { status: 400 });
+    const contentType = req.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      return NextResponse.json(
+        { error: "Invalid content type" },
+        { status: 400 },
+      );
     }
 
     const body = await req.json();
     const result = SendNotificationSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: 'Invalid payload', issues: result.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid payload", issues: result.error.issues },
+        { status: 400 },
+      );
     }
 
     const { title, body: contentBody, icon, url, userId } = result.data;
@@ -108,8 +131,8 @@ export async function POST(req: Request) {
     const payload = {
       title,
       body: contentBody,
-      icon: icon ?? '/favicon.ico',
-      url: url ?? '/dashboard',
+      icon: icon ?? "/favicon.ico",
+      url: url ?? "/dashboard",
       userId: userId ?? user.id,
     };
 
@@ -117,7 +140,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(notifResult);
   } catch (error) {
-    console.error('Error sending push notification:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error sending push notification:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

@@ -1,16 +1,16 @@
-'use server';
+"use server";
 
-import webpush from 'web-push';
-import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
-import { z } from 'zod';
-import { cookies } from 'next/headers';
-import { getUserFromSession } from '@/auth/core/session';
+import webpush from "web-push";
+import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+import { z } from "zod";
+import { cookies } from "next/headers";
+import { getUserFromSession } from "@/auth/core/session";
 
 function initVapid() {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const email = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
+  const email = process.env.VAPID_EMAIL || "mailto:admin@example.com";
 
   if (publicKey && privateKey) {
     webpush.setVapidDetails(email, publicKey, privateKey);
@@ -29,22 +29,24 @@ const NotificationPayloadSchema = z.object({
 
 type SubscriberRow = Prisma.SubscriberGetPayload<Record<string, never>>;
 
-export async function sendPushNotifications(payload: string | z.infer<typeof NotificationPayloadSchema>) {
+export async function sendPushNotifications(
+  payload: string | z.infer<typeof NotificationPayloadSchema>,
+) {
   const isConfigured = initVapid();
   if (!isConfigured) {
     return {
       success: false,
-      error: 'VAPID keys not configured in environment variables',
+      error: "VAPID keys not configured in environment variables",
     };
   }
 
-  const raw = typeof payload === 'string' ? JSON.parse(payload) : payload;
+  const raw = typeof payload === "string" ? JSON.parse(payload) : payload;
   const parsed = NotificationPayloadSchema.safeParse(raw);
 
   if (!parsed.success) {
     return {
       success: false,
-      error: 'Invalid notification payload',
+      error: "Invalid notification payload",
       issues: parsed.error.issues,
     };
   }
@@ -57,7 +59,7 @@ export async function sendPushNotifications(payload: string | z.infer<typeof Not
   });
 
   if (subscribers.length === 0) {
-    return { success: false, error: 'No subscribers found' };
+    return { success: false, error: "No subscribers found" };
   }
 
   const failed: string[] = [];
@@ -73,19 +75,23 @@ export async function sendPushNotifications(payload: string | z.infer<typeof Not
           JSON.stringify({
             title,
             body,
-            icon: icon ?? '/favicon.ico',
-            data: { url: url ?? '/dashboard' },
-          })
+            icon: icon ?? "/favicon.ico",
+            data: { url: url ?? "/dashboard" },
+          }),
         );
       } catch (err: unknown) {
         const e = err as { statusCode?: number };
         if (e?.statusCode === 410 || e?.statusCode === 404) {
           failed.push(sub.id);
         } else {
-          console.error('❌ Failed to send notification to subscriber:', sub.id, err);
+          console.error(
+            "❌ Failed to send notification to subscriber:",
+            sub.id,
+            err,
+          );
         }
       }
-    })
+    }),
   );
 
   // Clean up expired subscriptions
@@ -116,7 +122,7 @@ export async function saveSubscription(data: string) {
   if (!parsed.success) {
     return {
       success: false,
-      error: 'Invalid subscription payload',
+      error: "Invalid subscription payload",
       issues: parsed.error.issues,
     };
   }
@@ -144,13 +150,13 @@ export async function saveSubscription(data: string) {
 
     return {
       success: true,
-      message: 'Push subscription saved successfully',
+      message: "Push subscription saved successfully",
     };
   } catch (err) {
-    console.error('❌ Failed to save push subscription:', err);
+    console.error("❌ Failed to save push subscription:", err);
     return {
       success: false,
-      error: 'Database error',
+      error: "Database error",
     };
   }
 }

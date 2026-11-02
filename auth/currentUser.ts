@@ -1,9 +1,9 @@
-import { cookies } from 'next/headers';
-import { getUserFromSession, UserSession } from './core/session';
-import { cache } from 'react';
-import { prisma } from '@/lib/prisma';
-import { redirect } from 'next/navigation';
-import { getRoleNames, RoleKey } from '@/types/roles';
+import { cookies } from "next/headers";
+import { getUserFromSession, UserSession } from "./core/session";
+import { cache } from "react";
+import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { getRoleNames, RoleKey } from "@/types/roles";
 
 export type FullUser = Exclude<
   Awaited<ReturnType<typeof getUserFromDb>>,
@@ -45,7 +45,7 @@ async function _getCurrentUser({
 
   if (!sessionUser) {
     if (redirectIfNotFound) {
-      redirect('/login');
+      redirect("/login");
     }
     return null;
   }
@@ -54,7 +54,7 @@ async function _getCurrentUser({
     const fullUser = await getUserFromDb(sessionUser.id);
     if (!fullUser) {
       if (redirectIfNotFound) {
-        redirect('/login');
+        redirect("/login");
       }
       return null;
     }

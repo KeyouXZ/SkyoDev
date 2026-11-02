@@ -1,30 +1,38 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
-import { signIn, signUp } from '@/auth/action';
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+import { signIn, signUp } from "@/auth/action";
 
-type Tab = 'login' | 'register';
+type Tab = "login" | "register";
 
 export default function AuthPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>('login');
+  const [tab, setTab] = useState<Tab>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Login fields
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
   // Register fields
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   function switchTab(t: Tab) {
     setTab(t);
@@ -35,11 +43,14 @@ export default function AuthPage() {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await signIn({ email: loginEmail, password: loginPassword });
+      const result = await signIn({
+        email: loginEmail,
+        password: loginPassword,
+      });
       if (!result.success) {
-        setError(result.error ?? 'Login failed');
+        setError(result.error ?? "Login failed");
       } else {
-        router.push('/dashboard');
+        router.push("/dashboard");
         router.refresh();
       }
     });
@@ -49,7 +60,7 @@ export default function AuthPage() {
     e.preventDefault();
     setError(null);
     if (registerPassword !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
     startTransition(async () => {
@@ -60,9 +71,9 @@ export default function AuthPage() {
         lastName,
       });
       if (!result.success) {
-        setError(result.error ?? 'Registration failed');
+        setError(result.error ?? "Registration failed");
       } else {
-        router.push('/dashboard');
+        router.push("/dashboard");
         router.refresh();
       }
     });
@@ -83,7 +94,9 @@ export default function AuthPage() {
           <h1 className="text-4xl font-black tracking-widest text-[#00a2be] select-none drop-shadow-sm">
             NIRAGA
           </h1>
-          <p className="mt-1.5 text-sm text-gray-500 font-medium">Stock &amp; Inventory AI Platform</p>
+          <p className="mt-1.5 text-sm text-gray-500 font-medium">
+            Stock &amp; Inventory AI Platform
+          </p>
         </div>
 
         {/* Card */}
@@ -91,21 +104,21 @@ export default function AuthPage() {
           {/* Tab switcher */}
           <div className="flex border-b border-gray-100 bg-white/50">
             <button
-              onClick={() => switchTab('login')}
+              onClick={() => switchTab("login")}
               className={`flex-1 py-4 text-sm font-semibold transition-all duration-150 ${
-                tab === 'login'
-                  ? 'text-[#00a2be] border-b-2 border-[#00a2be] bg-white/70'
-                  : 'text-gray-400 hover:text-gray-600'
+                tab === "login"
+                  ? "text-[#00a2be] border-b-2 border-[#00a2be] bg-white/70"
+                  : "text-gray-400 hover:text-gray-600"
               }`}
             >
               Sign In
             </button>
             <button
-              onClick={() => switchTab('register')}
+              onClick={() => switchTab("register")}
               className={`flex-1 py-4 text-sm font-semibold transition-all duration-150 ${
-                tab === 'register'
-                  ? 'text-[#00a2be] border-b-2 border-[#00a2be] bg-white/70'
-                  : 'text-gray-400 hover:text-gray-600'
+                tab === "register"
+                  ? "text-[#00a2be] border-b-2 border-[#00a2be] bg-white/70"
+                  : "text-gray-400 hover:text-gray-600"
               }`}
             >
               Create Account
@@ -122,7 +135,7 @@ export default function AuthPage() {
             )}
 
             {/* ── LOGIN FORM ── */}
-            {tab === 'login' && (
+            {tab === "login" && (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-gray-600">
@@ -149,7 +162,7 @@ export default function AuthPage() {
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       required
                       autoComplete="current-password"
                       value={loginPassword}
@@ -162,7 +175,11 @@ export default function AuthPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -178,15 +195,15 @@ export default function AuthPage() {
                       Signing in…
                     </>
                   ) : (
-                    'Sign In'
+                    "Sign In"
                   )}
                 </button>
 
                 <p className="text-center text-xs text-gray-400 pt-1">
-                  Don&apos;t have an account?{' '}
+                  Don&apos;t have an account?{" "}
                   <button
                     type="button"
-                    onClick={() => switchTab('register')}
+                    onClick={() => switchTab("register")}
                     className="text-[#00a2be] font-semibold hover:underline"
                   >
                     Create one
@@ -196,7 +213,7 @@ export default function AuthPage() {
             )}
 
             {/* ── REGISTER FORM ── */}
-            {tab === 'register' && (
+            {tab === "register" && (
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -255,7 +272,7 @@ export default function AuthPage() {
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       required
                       autoComplete="new-password"
                       value={registerPassword}
@@ -268,7 +285,11 @@ export default function AuthPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -280,7 +301,7 @@ export default function AuthPage() {
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
-                      type={showConfirmPassword ? 'text' : 'password'}
+                      type={showConfirmPassword ? "text" : "password"}
                       required
                       autoComplete="new-password"
                       value={confirmPassword}
@@ -290,10 +311,16 @@ export default function AuthPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -309,15 +336,15 @@ export default function AuthPage() {
                       Creating account…
                     </>
                   ) : (
-                    'Create Account'
+                    "Create Account"
                   )}
                 </button>
 
                 <p className="text-center text-xs text-gray-400 pt-1">
-                  Already have an account?{' '}
+                  Already have an account?{" "}
                   <button
                     type="button"
-                    onClick={() => switchTab('login')}
+                    onClick={() => switchTab("login")}
                     className="text-[#00a2be] font-semibold hover:underline"
                   >
                     Sign in

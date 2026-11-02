@@ -1,13 +1,16 @@
-import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/auth/currentUser';
-import { prisma } from '@/lib/prisma';
-import { sendPushNotifications } from '@/lib/notification';
-import { z } from 'zod';
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/auth/currentUser";
+import { prisma } from "@/lib/prisma";
+import { sendPushNotifications } from "@/lib/notification";
+import { z } from "zod";
 
 const CreateSuggestionSchema = z.object({
-  productId: z.number().int().positive('Product ID is required'),
-  suggestedQuantity: z.number().int().positive('Quantity must be greater than 0'),
-  reason: z.string().min(1, 'Reason is required').max(300),
+  productId: z.number().int().positive("Product ID is required"),
+  suggestedQuantity: z
+    .number()
+    .int()
+    .positive("Quantity must be greater than 0"),
+  reason: z.string().min(1, "Reason is required").max(300),
 });
 
 /**
@@ -15,13 +18,16 @@ const CreateSuggestionSchema = z.object({
  * List reorder suggestions. Query options: status ('pending' | 'approved' | 'rejected')
  */
 export async function GET(req: Request) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
-  const status = searchParams.get('status') || undefined;
+  const status = searchParams.get("status") || undefined;
 
   try {
     const suggestions = await prisma.reorderSuggestion.findMany({
@@ -45,13 +51,16 @@ export async function GET(req: Request) {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(suggestions);
   } catch (error) {
-    console.error('Error fetching suggestions:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error fetching suggestions:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -60,22 +69,31 @@ export async function GET(req: Request) {
  * Manually or programmatically trigger a reorder suggestion.
  */
 export async function POST(req: Request) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const contentType = req.headers.get('content-type');
-    if (!contentType?.includes('application/json')) {
-      return NextResponse.json({ error: 'Invalid content type' }, { status: 400 });
+    const contentType = req.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      return NextResponse.json(
+        { error: "Invalid content type" },
+        { status: 400 },
+      );
     }
 
     const body = await req.json();
     const result = CreateSuggestionSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: 'Invalid suggestion data', issues: result.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid suggestion data", issues: result.error.issues },
+        { status: 400 },
+      );
     }
 
     const { productId, suggestedQuantity, reason } = result.data;
@@ -85,7 +103,7 @@ export async function POST(req: Request) {
     });
 
     if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     const suggestion = await prisma.reorderSuggestion.create({
@@ -94,7 +112,7 @@ export async function POST(req: Request) {
         productId,
         suggestedQuantity,
         reason,
-        status: 'pending',
+        status: "pending",
       },
       include: {
         product: true,
@@ -105,13 +123,18 @@ export async function POST(req: Request) {
     await sendPushNotifications({
       title: `Reorder Suggestion: ${product.name}`,
       body: `Suggested to reorder ${suggestedQuantity} units. Reason: ${reason}`,
-      url: '/suggestions',
+      url: "/suggestions",
       userId: user.id,
-    }).catch((err) => console.error('Failed to send suggestion notification:', err));
+    }).catch((err) =>
+      console.error("Failed to send suggestion notification:", err),
+    );
 
     return NextResponse.json(suggestion, { status: 201 });
   } catch (error) {
-    console.error('Error creating reorder suggestion:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error creating reorder suggestion:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

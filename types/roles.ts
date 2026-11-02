@@ -8,12 +8,12 @@
 
 export const Role = {
   NONE: 0,
-  USER: 1 << 0,         // 1  (0b00000001) - Base authenticated user
-  VIEWER: 1 << 1,       // 2  (0b00000010) - Read-only inventory viewer
-  STAFF: 1 << 2,        // 4  (0b00000100) - Inventory / sales operator
-  MANAGER: 1 << 3,      // 8  (0b00001000) - Stock manager & supplier liaison
-  ADMIN: 1 << 4,        // 16 (0b00010000) - Full inventory & user administrator
-  SUPER_ADMIN: 1 << 5,  // 32 (0b00100000) - System owner & root permissions
+  USER: 1 << 0, // 1  (0b00000001) - Base authenticated user
+  VIEWER: 1 << 1, // 2  (0b00000010) - Read-only inventory viewer
+  STAFF: 1 << 2, // 4  (0b00000100) - Inventory / sales operator
+  MANAGER: 1 << 3, // 8  (0b00001000) - Stock manager & supplier liaison
+  ADMIN: 1 << 4, // 16 (0b00010000) - Full inventory & user administrator
+  SUPER_ADMIN: 1 << 5, // 32 (0b00100000) - System owner & root permissions
 } as const;
 
 export type RoleKey = keyof typeof Role;
@@ -21,16 +21,16 @@ export type RoleValue = (typeof Role)[RoleKey];
 
 export const Permission = {
   NONE: 0,
-  VIEW_PRODUCTS: 1 << 0,        // 1
-  MANAGE_PRODUCTS: 1 << 1,      // 2
-  VIEW_SALES: 1 << 2,           // 4
-  RECORD_SALES: 1 << 3,         // 8
-  MANAGE_SUPPLIERS: 1 << 4,     // 16
-  MANAGE_ORDERS: 1 << 5,        // 32
-  VIEW_AI_SUGGESTIONS: 1 << 6,  // 64
-  MANAGE_BOM: 1 << 7,           // 128
-  MANAGE_USERS: 1 << 8,         // 256
-  SYSTEM_CONFIG: 1 << 9,        // 512
+  VIEW_PRODUCTS: 1 << 0, // 1
+  MANAGE_PRODUCTS: 1 << 1, // 2
+  VIEW_SALES: 1 << 2, // 4
+  RECORD_SALES: 1 << 3, // 8
+  MANAGE_SUPPLIERS: 1 << 4, // 16
+  MANAGE_ORDERS: 1 << 5, // 32
+  VIEW_AI_SUGGESTIONS: 1 << 6, // 64
+  MANAGE_BOM: 1 << 7, // 128
+  MANAGE_USERS: 1 << 8, // 256
+  SYSTEM_CONFIG: 1 << 9, // 512
 } as const;
 
 export type PermissionKey = keyof typeof Permission;
@@ -45,7 +45,8 @@ export const ROLE_PRESETS = {
   STAFF: Role.USER | Role.STAFF,
   MANAGER: Role.USER | Role.STAFF | Role.MANAGER,
   ADMIN: Role.USER | Role.STAFF | Role.MANAGER | Role.ADMIN,
-  SUPER_ADMIN: Role.USER | Role.STAFF | Role.MANAGER | Role.ADMIN | Role.SUPER_ADMIN,
+  SUPER_ADMIN:
+    Role.USER | Role.STAFF | Role.MANAGER | Role.ADMIN | Role.SUPER_ADMIN,
 } as const;
 
 /**
@@ -54,7 +55,10 @@ export const ROLE_PRESETS = {
 export const ROLE_DEFAULT_PERMISSIONS: Record<RoleKey, number> = {
   NONE: Permission.NONE,
   USER: Permission.VIEW_PRODUCTS,
-  VIEWER: Permission.VIEW_PRODUCTS | Permission.VIEW_SALES | Permission.VIEW_AI_SUGGESTIONS,
+  VIEWER:
+    Permission.VIEW_PRODUCTS |
+    Permission.VIEW_SALES |
+    Permission.VIEW_AI_SUGGESTIONS,
   STAFF:
     Permission.VIEW_PRODUCTS |
     Permission.MANAGE_PRODUCTS |
@@ -118,7 +122,10 @@ export function addRole(userRole: number, ...rolesToAdd: number[]): number {
 /**
  * Remove one or more role flags from an existing role bitmask.
  */
-export function removeRole(userRole: number, ...rolesToRemove: number[]): number {
+export function removeRole(
+  userRole: number,
+  ...rolesToRemove: number[]
+): number {
   return rolesToRemove.reduce((acc, r) => acc & ~r, userRole);
 }
 
@@ -148,7 +155,10 @@ export function createRoleBitmask(roleNames: (keyof typeof Role)[]): number {
 /**
  * Check if user permissions satisfy a required permission.
  */
-export function hasPermission(userPermissions: number, requiredPermission: number): boolean {
+export function hasPermission(
+  userPermissions: number,
+  requiredPermission: number,
+): boolean {
   if (requiredPermission === Permission.NONE) return true;
   return (userPermissions & requiredPermission) === requiredPermission;
 }
@@ -158,7 +168,10 @@ export function hasPermission(userPermissions: number, requiredPermission: numbe
  */
 export function calculatePermissions(userRole: number): number {
   let permissions = Permission.NONE;
-  for (const [roleKey, roleVal] of Object.entries(Role) as [RoleKey, number][]) {
+  for (const [roleKey, roleVal] of Object.entries(Role) as [
+    RoleKey,
+    number,
+  ][]) {
     if (roleVal !== 0 && (userRole & roleVal) === roleVal) {
       permissions |= ROLE_DEFAULT_PERMISSIONS[roleKey];
     }

@@ -1,4 +1,4 @@
-import NiragaDashboard from './dashboard-client';
+import NiragaDashboard from "./dashboard-client";
 
 export const instant = false;
 

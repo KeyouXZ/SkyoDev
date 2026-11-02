@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Bell,
   HelpCircle,
@@ -10,10 +10,10 @@ import {
   X,
   Menu,
   LogOut,
-} from 'lucide-react';
-import { signOut } from '@/auth/action';
-import type { CurrentUser } from '@/auth/currentUser';
-import { useUser } from '@/context/UserContext';
+} from "lucide-react";
+import { signOut } from "@/auth/action";
+import type { CurrentUser } from "@/auth/currentUser";
+import { useUser } from "@/context/UserContext";
 
 export interface HeaderProps {
   title?: string;
@@ -25,11 +25,11 @@ export interface HeaderProps {
 }
 
 export function Header({
-  title = 'Dashboard',
+  title = "Dashboard",
   user: propUser,
   setSidebarOpen,
   onMenuClick,
-  className = '',
+  className = "",
   children,
 }: HeaderProps) {
   const contextUser = useUser();
@@ -37,11 +37,13 @@ export function Header({
   const [showNotificationToast, setShowNotificationToast] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
-  const displayName = user?.name ?? user?.email?.split('@')[0] ?? 'User';
+  const displayName = user?.name ?? user?.email?.split("@")[0] ?? "User";
   const handleMenuClick = onMenuClick ?? (() => setSidebarOpen?.(true));
 
   return (
-    <header className={`flex items-center justify-between gap-3 rounded-2xl border border-white/60 bg-white/85 px-4 py-2.5 shadow-sm backdrop-blur-md ${className}`}>
+    <header
+      className={`flex items-center justify-between gap-3 rounded-2xl border border-white/60 bg-white/85 px-4 py-2.5 shadow-sm backdrop-blur-md ${className}`}
+    >
       <div className="flex flex-1 items-center gap-3">
         {(onMenuClick || setSidebarOpen) && (
           <button
@@ -86,8 +88,12 @@ export function Header({
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#00a2be]/15 text-[#00a2be]">
               <UserIcon className="h-3.5 w-3.5" />
             </div>
-            <span className="max-w-25 truncate font-semibold text-gray-700">{displayName}</span>
-            <ChevronDown className={`h-3.5 w-3.5 text-gray-500 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
+            <span className="max-w-25 truncate font-semibold text-gray-700">
+              {displayName}
+            </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 text-gray-500 transition-transform ${userDropdownOpen ? "rotate-180" : ""}`}
+            />
           </button>
 
           {userDropdownOpen && (
@@ -98,8 +104,12 @@ export function Header({
               />
               <div className="absolute right-0 z-50 mt-2 w-52 animate-in fade-in zoom-in-95 rounded-2xl border border-gray-100 bg-white py-1.5 text-sm shadow-lg duration-100">
                 <div className="border-b border-gray-100 px-4 py-2.5">
-                  <p className="truncate text-xs font-semibold text-gray-900">{displayName}</p>
-                  <p className="truncate text-xs text-gray-500">{user?.email}</p>
+                  <p className="truncate text-xs font-semibold text-gray-900">
+                    {displayName}
+                  </p>
+                  <p className="truncate text-xs text-gray-500">
+                    {user?.email}
+                  </p>
                 </div>
                 <button
                   onClick={() => setUserDropdownOpen(false)}
@@ -129,12 +139,16 @@ export function Header({
                 <Check className="h-4 w-4" />
                 <span>Web Push Active</span>
               </div>
-              <button onClick={() => setShowNotificationToast(false)} className="text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => setShowNotificationToast(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
             <p className="mt-1 text-gray-500">
-              3 Low stock alerts recorded today. Restock suggestions are ready for review.
+              3 Low stock alerts recorded today. Restock suggestions are ready
+              for review.
             </p>
           </div>
         )}

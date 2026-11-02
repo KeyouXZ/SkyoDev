@@ -1,4 +1,4 @@
-import { Role, RoleKey } from './roles';
+import { Role, RoleKey } from "./roles";
 
 export interface User {
   id: string;

@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/auth/currentUser';
-import { prisma } from '@/lib/prisma';
-import { sendPushNotifications } from '@/lib/notification';
-import { z } from 'zod';
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/auth/currentUser";
+import { prisma } from "@/lib/prisma";
+import { sendPushNotifications } from "@/lib/notification";
+import { z } from "zod";
 
 const RecordSaleSchema = z.object({
-  productId: z.number().int().positive('Product ID is required'),
-  quantity: z.number().int().positive('Quantity must be at least 1'),
+  productId: z.number().int().positive("Product ID is required"),
+  quantity: z.number().int().positive("Quantity must be at least 1"),
   saleDate: z.string().datetime().optional(),
 });
 
@@ -15,14 +15,21 @@ const RecordSaleSchema = z.object({
  * List recent sales with product info. Optional query: productId, limit
  */
 export async function GET(req: Request) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
-  const productId = searchParams.get('productId') ? parseInt(searchParams.get('productId')!, 10) : undefined;
-  const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : 50;
+  const productId = searchParams.get("productId")
+    ? parseInt(searchParams.get("productId")!, 10)
+    : undefined;
+  const limit = searchParams.get("limit")
+    ? parseInt(searchParams.get("limit")!, 10)
+    : 50;
 
   try {
     const sales = await prisma.sale.findMany({
@@ -42,14 +49,17 @@ export async function GET(req: Request) {
           },
         },
       },
-      orderBy: { saleDate: 'desc' },
+      orderBy: { saleDate: "desc" },
       take: limit,
     });
 
     return NextResponse.json(sales);
   } catch (error) {
-    console.error('Error fetching sales:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error fetching sales:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -58,22 +68,31 @@ export async function GET(req: Request) {
  * Record a sale: decrements inventory stock level and triggers low-stock alerts.
  */
 export async function POST(req: Request) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const contentType = req.headers.get('content-type');
-    if (!contentType?.includes('application/json')) {
-      return NextResponse.json({ error: 'Invalid content type' }, { status: 400 });
+    const contentType = req.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      return NextResponse.json(
+        { error: "Invalid content type" },
+        { status: 400 },
+      );
     }
 
     const body = await req.json();
     const result = RecordSaleSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: 'Invalid sale data', issues: result.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid sale data", issues: result.error.issues },
+        { status: 400 },
+      );
     }
 
     const { productId, quantity, saleDate } = result.data;
@@ -84,13 +103,16 @@ export async function POST(req: Request) {
     });
 
     if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     if (product.stockLevel < quantity) {
-      return NextResponse.json({
-        error: `Insufficient stock: only ${product.stockLevel} units available, requested ${quantity}`,
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: `Insufficient stock: only ${product.stockLevel} units available, requested ${quantity}`,
+        },
+        { status: 400 },
+      );
     }
 
     // Execute atomic sale & stock decrement
@@ -123,19 +145,22 @@ export async function POST(req: Request) {
         where: {
           productId,
           userId: user.id,
-          status: 'pending',
+          status: "pending",
         },
       });
 
       if (!existingSuggestion) {
-        const suggestedQty = Math.max(updatedProduct.reorderPoint * 2 - updatedProduct.stockLevel, 10);
+        const suggestedQty = Math.max(
+          updatedProduct.reorderPoint * 2 - updatedProduct.stockLevel,
+          10,
+        );
         await prisma.reorderSuggestion.create({
           data: {
             userId: user.id,
             productId,
             suggestedQuantity: suggestedQty,
             reason: `Stock fell to ${updatedProduct.stockLevel} (reorder point: ${updatedProduct.reorderPoint}) following sale #${sale.id}.`,
-            status: 'pending',
+            status: "pending",
           },
         });
       }
@@ -144,17 +169,25 @@ export async function POST(req: Request) {
       await sendPushNotifications({
         title: `Low Stock Alert: ${updatedProduct.name}`,
         body: `Stock for ${updatedProduct.name} fell to ${updatedProduct.stockLevel} (reorder point: ${updatedProduct.reorderPoint}). Reorder suggestion has been generated.`,
-        url: '/inventory',
+        url: "/inventory",
         userId: user.id,
-      }).catch((err) => console.error('Failed to send sale low-stock push notification:', err));
+      }).catch((err) =>
+        console.error("Failed to send sale low-stock push notification:", err),
+      );
     }
 
-    return NextResponse.json({
-      sale,
-      currentStock: updatedProduct.stockLevel,
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        sale,
+        currentStock: updatedProduct.stockLevel,
+      },
+      { status: 201 },
+    );
   } catch (error) {
-    console.error('Error recording sale:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error recording sale:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

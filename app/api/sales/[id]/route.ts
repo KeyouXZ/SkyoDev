@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/auth/currentUser';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/auth/currentUser";
+import { prisma } from "@/lib/prisma";
 
 type Context = {
   params: Promise<{ id: string }>;
@@ -10,15 +10,18 @@ type Context = {
  * GET /api/sales/[id]
  */
 export async function GET(_req: Request, { params }: Context) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const saleId = parseInt(id, 10);
   if (isNaN(saleId)) {
-    return NextResponse.json({ error: 'Invalid sale ID' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid sale ID" }, { status: 400 });
   }
 
   try {
@@ -30,13 +33,19 @@ export async function GET(_req: Request, { params }: Context) {
     });
 
     if (!sale) {
-      return NextResponse.json({ error: 'Sale record not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Sale record not found" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json(sale);
   } catch (error) {
-    console.error('Error fetching sale record:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error fetching sale record:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -45,15 +54,18 @@ export async function GET(_req: Request, { params }: Context) {
  * Cancels a sale and restores the deducted stock back to the product.
  */
 export async function DELETE(_req: Request, { params }: Context) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const saleId = parseInt(id, 10);
   if (isNaN(saleId)) {
-    return NextResponse.json({ error: 'Invalid sale ID' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid sale ID" }, { status: 400 });
   }
 
   try {
@@ -62,7 +74,10 @@ export async function DELETE(_req: Request, { params }: Context) {
     });
 
     if (!sale) {
-      return NextResponse.json({ error: 'Sale record not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Sale record not found" },
+        { status: 404 },
+      );
     }
 
     // Atomically restore product stock and delete the sale
@@ -78,9 +93,16 @@ export async function DELETE(_req: Request, { params }: Context) {
       }),
     ]);
 
-    return NextResponse.json({ success: true, message: 'Sale cancelled and stock restored', id: saleId });
+    return NextResponse.json({
+      success: true,
+      message: "Sale cancelled and stock restored",
+      id: saleId,
+    });
   } catch (error) {
-    console.error('Error cancelling sale:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error cancelling sale:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

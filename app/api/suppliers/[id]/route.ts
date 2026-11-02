@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/auth/currentUser';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/auth/currentUser";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 const UpdateSupplierSchema = z.object({
   name: z.string().min(1).max(150).optional(),
@@ -19,15 +19,18 @@ type Context = {
  * GET /api/suppliers/[id]
  */
 export async function GET(_req: Request, { params }: Context) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const supplierId = parseInt(id, 10);
   if (isNaN(supplierId)) {
-    return NextResponse.json({ error: 'Invalid supplier ID' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid supplier ID" }, { status: 400 });
   }
 
   try {
@@ -48,13 +51,19 @@ export async function GET(_req: Request, { params }: Context) {
     });
 
     if (!supplier) {
-      return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Supplier not found" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json(supplier);
   } catch (error) {
-    console.error('Error fetching supplier:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error fetching supplier:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -62,15 +71,18 @@ export async function GET(_req: Request, { params }: Context) {
  * PUT /api/suppliers/[id]
  */
 export async function PUT(req: Request, { params }: Context) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const supplierId = parseInt(id, 10);
   if (isNaN(supplierId)) {
-    return NextResponse.json({ error: 'Invalid supplier ID' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid supplier ID" }, { status: 400 });
   }
 
   try {
@@ -78,7 +90,10 @@ export async function PUT(req: Request, { params }: Context) {
     const result = UpdateSupplierSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: 'Invalid supplier update', issues: result.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid supplier update", issues: result.error.issues },
+        { status: 400 },
+      );
     }
 
     const existing = await prisma.supplier.findFirst({
@@ -86,7 +101,10 @@ export async function PUT(req: Request, { params }: Context) {
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Supplier not found" },
+        { status: 404 },
+      );
     }
 
     const updated = await prisma.supplier.update({
@@ -96,8 +114,11 @@ export async function PUT(req: Request, { params }: Context) {
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error('Error updating supplier:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error updating supplier:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -105,15 +126,18 @@ export async function PUT(req: Request, { params }: Context) {
  * DELETE /api/suppliers/[id]
  */
 export async function DELETE(_req: Request, { params }: Context) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const supplierId = parseInt(id, 10);
   if (isNaN(supplierId)) {
-    return NextResponse.json({ error: 'Invalid supplier ID' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid supplier ID" }, { status: 400 });
   }
 
   try {
@@ -122,16 +146,26 @@ export async function DELETE(_req: Request, { params }: Context) {
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Supplier not found" },
+        { status: 404 },
+      );
     }
 
     await prisma.supplier.delete({
       where: { id: supplierId },
     });
 
-    return NextResponse.json({ success: true, message: 'Supplier deleted successfully', id: supplierId });
+    return NextResponse.json({
+      success: true,
+      message: "Supplier deleted successfully",
+      id: supplierId,
+    });
   } catch (error) {
-    console.error('Error deleting supplier:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error deleting supplier:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

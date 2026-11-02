@@ -1,8 +1,8 @@
-import { getCurrentUser } from '@/auth/currentUser';
-import { UserProvider } from '@/context/UserContext';
-import { Suspense } from 'react';
-import LoadingPage from '@/components/Suspense';
-import { PushProvider } from '@/components/PushProvider';
+import { getCurrentUser } from "@/auth/currentUser";
+import { UserProvider } from "@/context/UserContext";
+import { Suspense } from "react";
+import LoadingPage from "@/components/Suspense";
+import { PushProvider } from "@/components/PushProvider";
 
 export const instant = false;
 
@@ -16,9 +16,7 @@ export default async function AuthLayout({
   return (
     <Suspense fallback={<LoadingPage />}>
       <UserProvider value={user}>
-        <PushProvider>
-          {children}
-        </PushProvider>
+        <PushProvider>{children}</PushProvider>
       </UserProvider>
     </Suspense>
   );

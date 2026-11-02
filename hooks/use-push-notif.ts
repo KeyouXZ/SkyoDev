@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { saveSubscription } from '@/lib/notification';
-import { useEffect, useState } from 'react';
+import { saveSubscription } from "@/lib/notification";
+import { useEffect, useState } from "react";
 
 function urlBase64ToUint8Array(base64String: string) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; ++i) {
@@ -16,19 +16,22 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export const usePushNotification = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [permission, setPermission] =
+    useState<NotificationPermission>("default");
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
     const registerSW = async () => {
-      if ('Notification' in window) {
+      if ("Notification" in window) {
         setPermission(Notification.permission);
       }
 
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        const registration = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+        });
         const existing = await registration.pushManager.getSubscription();
 
         if (existing) {
@@ -40,7 +43,7 @@ export const usePushNotification = () => {
         if (!vapidKey) return;
 
         // If permission is already granted, subscribe automatically
-        if (Notification.permission === 'granted') {
+        if (Notification.permission === "granted") {
           const sub = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(vapidKey),
@@ -50,7 +53,7 @@ export const usePushNotification = () => {
           setIsSubscribed(true);
         }
       } catch (err) {
-        console.error('[PushNotification] Registration error:', err);
+        console.error("[PushNotification] Registration error:", err);
       }
     };
 
@@ -58,17 +61,20 @@ export const usePushNotification = () => {
   }, []);
 
   const subscribe = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window))
+      return false;
 
     try {
       const perm = await Notification.requestPermission();
       setPermission(perm);
-      if (perm !== 'granted') return false;
+      if (perm !== "granted") return false;
 
       const registration = await navigator.serviceWorker.ready;
       const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidKey) {
-        console.warn('Cannot subscribe: NEXT_PUBLIC_VAPID_PUBLIC_KEY is not defined');
+        console.warn(
+          "Cannot subscribe: NEXT_PUBLIC_VAPID_PUBLIC_KEY is not defined",
+        );
         return false;
       }
 
@@ -81,7 +87,7 @@ export const usePushNotification = () => {
       setIsSubscribed(true);
       return true;
     } catch (err) {
-      console.error('[PushNotification] Subscription failed:', err);
+      console.error("[PushNotification] Subscription failed:", err);
       return false;
     }
   };

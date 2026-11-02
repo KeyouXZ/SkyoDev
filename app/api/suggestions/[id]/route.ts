@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/auth/currentUser';
-import { prisma } from '@/lib/prisma';
-import { sendPushNotifications } from '@/lib/notification';
-import { z } from 'zod';
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/auth/currentUser";
+import { prisma } from "@/lib/prisma";
+import { sendPushNotifications } from "@/lib/notification";
+import { z } from "zod";
 
 const UpdateStatusSchema = z.object({
-  status: z.enum(['pending', 'approved', 'rejected']),
+  status: z.enum(["pending", "approved", "rejected"]),
 });
 
 type Context = {
@@ -17,15 +17,21 @@ type Context = {
  * Approve or reject suggestion. If approved, automatically drafts a Purchase Order.
  */
 export async function PATCH(req: Request, { params }: Context) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const suggestionId = parseInt(id, 10);
   if (isNaN(suggestionId)) {
-    return NextResponse.json({ error: 'Invalid suggestion ID' }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid suggestion ID" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -33,7 +39,10 @@ export async function PATCH(req: Request, { params }: Context) {
     const result = UpdateStatusSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: 'Invalid status', issues: result.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid status", issues: result.error.issues },
+        { status: 400 },
+      );
     }
 
     const { status } = result.data;
@@ -48,7 +57,10 @@ export async function PATCH(req: Request, { params }: Context) {
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Suggestion not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Suggestion not found" },
+        { status: 404 },
+      );
     }
 
     // Update status
@@ -60,12 +72,12 @@ export async function PATCH(req: Request, { params }: Context) {
 
     // If approved, create draft purchase order
     let purchaseOrder = null;
-    if (status === 'approved') {
+    if (status === "approved") {
       purchaseOrder = await prisma.purchaseOrder.create({
         data: {
           userId: user.id,
-          status: 'draft',
-          supplier: existing.product.supplier?.name ?? 'Default Supplier',
+          status: "draft",
+          supplier: existing.product.supplier?.name ?? "Default Supplier",
           notes: `Auto-generated from Approved Reorder Suggestion #${suggestionId}: ${existing.reason}`,
           items: {
             create: [
@@ -85,9 +97,11 @@ export async function PATCH(req: Request, { params }: Context) {
       await sendPushNotifications({
         title: `Reorder Approved: ${existing.product.name}`,
         body: `Suggestion approved. Draft Purchase Order #${purchaseOrder.id} for ${existing.suggestedQuantity} units created.`,
-        url: '/purchase-orders',
+        url: "/purchase-orders",
         userId: user.id,
-      }).catch((err) => console.error('Failed to send PO push notification:', err));
+      }).catch((err) =>
+        console.error("Failed to send PO push notification:", err),
+      );
     }
 
     return NextResponse.json({
@@ -95,8 +109,11 @@ export async function PATCH(req: Request, { params }: Context) {
       purchaseOrder,
     });
   } catch (error) {
-    console.error('Error updating suggestion status:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error updating suggestion status:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -104,15 +121,21 @@ export async function PATCH(req: Request, { params }: Context) {
  * DELETE /api/suggestions/[id]
  */
 export async function DELETE(_req: Request, { params }: Context) {
-  const user = await getCurrentUser({ withFullUser: false, redirectIfNotFound: false });
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: false,
+  });
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const suggestionId = parseInt(id, 10);
   if (isNaN(suggestionId)) {
-    return NextResponse.json({ error: 'Invalid suggestion ID' }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid suggestion ID" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -121,16 +144,26 @@ export async function DELETE(_req: Request, { params }: Context) {
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Suggestion not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Suggestion not found" },
+        { status: 404 },
+      );
     }
 
     await prisma.reorderSuggestion.delete({
       where: { id: suggestionId },
     });
 
-    return NextResponse.json({ success: true, message: 'Suggestion deleted', id: suggestionId });
+    return NextResponse.json({
+      success: true,
+      message: "Suggestion deleted",
+      id: suggestionId,
+    });
   } catch (error) {
-    console.error('Error deleting suggestion:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error deleting suggestion:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

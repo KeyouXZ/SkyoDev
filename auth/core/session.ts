@@ -1,10 +1,10 @@
-import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
-import { UserSessionData } from '@/types/User';
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { UserSessionData } from "@/types/User";
 
 // Seven days in seconds
 export const SESSION_EXPIRATION_SECONDS = 60 * 60 * 24 * 7;
-export const COOKIE_SESSION_KEY = 'session-id';
+export const COOKIE_SESSION_KEY = "session-id";
 
 export const sessionSchema = z.object({
   id: z.string(),
@@ -23,11 +23,11 @@ export type Cookies = {
     options: {
       secure?: boolean;
       httpOnly?: boolean;
-      sameSite?: 'strict' | 'lax';
+      sameSite?: "strict" | "lax";
       expires?: number | Date;
       maxAge?: number;
       path?: string;
-    }
+    },
   ) => void;
   get: (key: string) => { name: string; value: string } | undefined;
   delete: (key: string) => void;
@@ -36,7 +36,9 @@ export type Cookies = {
 /**
  * Retrieve user from current request session cookie via PostgreSQL
  */
-export async function getUserFromSession(cookies: Pick<Cookies, 'get'>): Promise<UserSession | null> {
+export async function getUserFromSession(
+  cookies: Pick<Cookies, "get">,
+): Promise<UserSession | null> {
   const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value;
   if (!sessionId) return null;
 
@@ -48,7 +50,7 @@ export async function getUserFromSession(cookies: Pick<Cookies, 'get'>): Promise
  */
 export async function updateUserSessionData(
   user: UserSessionData,
-  cookies: Pick<Cookies, 'get'>
+  cookies: Pick<Cookies, "get">,
 ): Promise<UserSession | null> {
   const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value;
   if (!sessionId) return null;
@@ -83,7 +85,7 @@ export async function updateUserSessionData(
  */
 export async function createUserSession(
   user: UserSessionData,
-  cookies: Pick<Cookies, 'set'>
+  cookies: Pick<Cookies, "set">,
 ): Promise<string> {
   const sessionId = globalThis.crypto.randomUUID();
   const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_SECONDS * 1000);
@@ -110,7 +112,7 @@ export async function createUserSession(
  * Extend session expiration in PostgreSQL and update cookie
  */
 export async function updateUserSessionExpiration(
-  cookies: Pick<Cookies, 'get' | 'set'>
+  cookies: Pick<Cookies, "get" | "set">,
 ): Promise<void> {
   const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value;
   if (!sessionId) return;
@@ -124,7 +126,7 @@ export async function updateUserSessionExpiration(
     });
     setCookie(sessionId, cookies);
   } catch (error) {
-    console.error('Failed to update session expiration:', error);
+    console.error("Failed to update session expiration:", error);
   }
 }
 
@@ -132,7 +134,7 @@ export async function updateUserSessionExpiration(
  * Delete session from PostgreSQL and clear cookie
  */
 export async function removeUserFromSession(
-  cookies: Pick<Cookies, 'get' | 'delete'>
+  cookies: Pick<Cookies, "get" | "delete">,
 ): Promise<void> {
   const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value;
   if (sessionId) {
@@ -141,19 +143,19 @@ export async function removeUserFromSession(
         where: { id: sessionId },
       });
     } catch (error) {
-      console.error('Failed to delete session from database:', error);
+      console.error("Failed to delete session from database:", error);
     }
   }
 
   cookies.delete(COOKIE_SESSION_KEY);
 }
 
-function setCookie(sessionId: string, cookies: Pick<Cookies, 'set'>) {
+function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
   cookies.set(COOKIE_SESSION_KEY, sessionId, {
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
+    sameSite: "lax",
+    path: "/",
     maxAge: SESSION_EXPIRATION_SECONDS,
   });
 }
@@ -161,7 +163,9 @@ function setCookie(sessionId: string, cookies: Pick<Cookies, 'set'>) {
 /**
  * Lookup session in PostgreSQL and verify expiration
  */
-export async function getUserSessionById(sessionId: string): Promise<UserSession | null> {
+export async function getUserSessionById(
+  sessionId: string,
+): Promise<UserSession | null> {
   try {
     const session = await prisma.session.findUnique({
       where: { id: sessionId },
@@ -195,7 +199,7 @@ export async function getUserSessionById(sessionId: string): Promise<UserSession
       profileImageUrl: session.user.profileImageUrl,
     };
   } catch (error) {
-    console.error('Error fetching session from PostgreSQL:', error);
+    console.error("Error fetching session from PostgreSQL:", error);
     return null;
   }
 }
