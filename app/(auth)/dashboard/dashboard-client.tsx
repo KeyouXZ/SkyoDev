@@ -6,19 +6,10 @@ import {
   ShoppingBag,
   ScanLine,
   ShoppingCart,
-  Search,
-  Bell,
-  HelpCircle,
-  User as UserIcon,
-  ChevronDown,
   AlertTriangle,
   DollarSign,
   TrendingUp,
   LineChart as LineChartIcon,
-  Check,
-  X,
-  Menu,
-  LogOut,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -30,7 +21,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { Navigation } from '@/components/Navigation';
-import { signOut } from '@/auth/action';
+import { Header } from '@/components/Header';
 import type { CurrentUser } from '@/auth/currentUser';
 import { useUser } from '@/context/UserContext';
 
@@ -74,11 +65,6 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
   const user = propUser ?? contextUser;
   const mounted = useMounted();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showNotificationToast, setShowNotificationToast] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const displayName = user.name ?? user.email.split('@')[0];
 
   const quickActions = [
     { title: 'View AI Forecast', subtitle: 'See reorder suggestions', icon: TrendingUp, iconBg: 'bg-[#cfe9f8] text-[#0284c7]' },
@@ -95,111 +81,10 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
         {/* Main Content Area */}
         <main className="flex min-w-0 flex-1 flex-col">
           {/* Top Bar */}
-          <header className="flex items-center justify-between gap-3 rounded-2xl border border-white/60 bg-white/85 px-4 py-2.5 shadow-sm backdrop-blur-md">
-            <div className="flex flex-1 items-center gap-3">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="rounded-full p-2 text-gray-700 hover:bg-slate-100 lg:hidden"
-                aria-label="Toggle menu"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <div className="relative max-w-md flex-1">
-                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Pencarian"
-                  className="w-full rounded-full border-none bg-[#edf6fa] py-2 pl-10 pr-4 text-sm text-gray-800 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#00a2be]/30"
-                />
-              </div>
-            </div>
-
-            <div className="relative flex shrink-0 items-center gap-2.5">
-              {/* Notification Bell */}
-              <button
-                onClick={() => setShowNotificationToast(!showNotificationToast)}
-                className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-gray-100 bg-white text-gray-600 shadow-xs transition-all hover:text-gray-900 hover:shadow-sm sm:h-10 sm:w-10"
-                aria-label="Notifications"
-              >
-                <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-              </button>
-
-              {/* Help Button */}
-              <button
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-gray-100 bg-white text-gray-600 shadow-xs transition-all hover:text-gray-900 hover:shadow-sm sm:h-10 sm:w-10"
-                aria-label="Help"
-              >
-                <HelpCircle className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-              </button>
-
-              {/* User Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex cursor-pointer items-center gap-2 rounded-full border border-gray-100 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 shadow-xs transition-all hover:shadow-sm sm:px-3.5 sm:text-sm"
-                >
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#00a2be]/15 text-[#00a2be]">
-                    <UserIcon className="h-3.5 w-3.5" />
-                  </div>
-                  <span className="font-semibold text-gray-700 max-w-25 truncate">{displayName}</span>
-                  <ChevronDown className={`h-3.5 w-3.5 text-gray-500 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {userDropdownOpen && (
-                  <div className="absolute right-0 z-50 mt-2 w-52 animate-in fade-in zoom-in-95 rounded-2xl border border-gray-100 bg-white py-1.5 text-sm shadow-lg duration-100">
-                    <div className="border-b border-gray-100 px-4 py-2.5">
-                      <p className="text-xs font-semibold text-gray-900 truncate">{displayName}</p>
-                      <p className="truncate text-xs text-gray-500">{user.email}</p>
-                    </div>
-                    <button
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="flex w-full items-center justify-between px-4 py-2 text-left text-xs text-gray-700 hover:bg-slate-50"
-                    >
-                      Account Settings
-                    </button>
-                    <form action={signOut}>
-                      <button
-                        type="submit"
-                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-xs text-red-600 hover:bg-slate-50"
-                      >
-                        <LogOut className="h-3.5 w-3.5" />
-                        Sign Out
-                      </button>
-                    </form>
-                  </div>
-                )}
-              </div>
-
-              {/* Notification Toast */}
-              {showNotificationToast && (
-                <div className="absolute right-0 top-12 z-50 w-72 animate-in fade-in slide-in-from-top-2 rounded-2xl border border-gray-100 bg-white p-3.5 text-xs shadow-xl duration-150">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2 font-semibold text-emerald-600">
-                      <Check className="h-4 w-4" />
-                      <span>Web Push Active</span>
-                    </div>
-                    <button onClick={() => setShowNotificationToast(false)} className="text-gray-400 hover:text-gray-600">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  <p className="mt-1 text-gray-500">
-                    3 Low stock alerts recorded today. Restock suggestions are ready for review.
-                  </p>
-                </div>
-              )}
-            </div>
-          </header>
-
-          {/* Dashboard Title */}
-          <div className="mb-4 mt-5">
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h2>
-          </div>
+          <Header title="Dashboard" setSidebarOpen={setSidebarOpen} user={user} />
 
           {/* 4 Stat Cards */}
-          <div className="mb-5 grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+          <div className="my-5 grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
             <div className="flex flex-col justify-between rounded-2xl border border-white/60 bg-[#e4f3fa] p-4 shadow-xs transition-all hover:shadow-sm sm:p-5">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-800">Total Products</span>
