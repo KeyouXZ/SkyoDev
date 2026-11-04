@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -14,8 +14,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NIGARA - Dashboard",
-  description: "",
+  title: {
+    default: "NIRAGA",
+    template: "%s | NIRAGA",
+  },
+  description:
+    "NIRAGA Stock & Inventory AI — manage products, stock levels, sales, and reorder suggestions in one place.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#00a2be",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
