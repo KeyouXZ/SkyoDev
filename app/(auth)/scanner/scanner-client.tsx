@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Html5Qrcode } from "html5-qrcode";
 import { toast } from "sonner";
 import {
   ScanLine,
@@ -35,11 +36,6 @@ interface ScanResult {
   hasPendingSuggestion: boolean;
 }
 
-// BarcodeDetector is not yet in TS DOM types everywhere.
-interface BarcodeDetectorLike {
-  detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]>;
-}
-
 export default function ScannerPageClient() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sku, setSku] = useState("");
@@ -49,24 +45,32 @@ export default function ScannerPageClient() {
   const [receiveQty, setReceiveQty] = useState(1);
   const [busy, setBusy] = useState(false);
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const detectorRef = useRef<BarcodeDetectorLike | null>(null);
+  const scannerRef = useRef<HTMLDivElement | null>(null);
+  const qrCodeRef = useRef<Html5Qrcode | null>(null);
   const lastScanRef = useRef<{ value: string; at: number }>({
     value: "",
     at: 0,
   });
 
-  const stopCamera = useCallback(() => {
-    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
+  const stopCamera = useCallback(async () => {
+    const scanner = qrCodeRef.current;
+    qrCodeRef.current = null;
+    if (scanner) {
+      try {
+        await scanner.stop();
+      } catch {
+        // Already stopped.
+      }
+      scanner.clear();
+    }
     setScanning(false);
   }, []);
 
-  useEffect(() => stopCamera, [stopCamera]);
+  useEffect(() => {
+    return () => {
+      void stopCamera();
+    };
+  }, [stopCamera]);
 
   const lookup = useCallback(async (code: string) => {
     const trimmed = code.trim();
@@ -94,73 +98,33 @@ export default function ScannerPageClient() {
   }, []);
 
   const startCamera = useCallback(async () => {
+    const el = scannerRef.current;
+    if (!el) return;
     try {
-      const DetectorCtor = (
-        window as unknown as {
-          BarcodeDetector?: new (opts?: {
-            formats: string[];
-          }) => BarcodeDetectorLike;
-        }
-      ).BarcodeDetector;
-
-      if (!DetectorCtor) {
-        toast.error("Scanner not supported", {
-          description:
-            "Your browser doesn't support barcode detection. Enter the SKU manually.",
-        });
-        return;
-      }
-
-      detectorRef.current = new DetectorCtor({
-        formats: [
-          "qr_code",
-          "code_128",
-          "code_39",
-          "ean_13",
-          "ean_8",
-          "upc_a",
-          "upc_e",
-          "itf14",
-          "codabar",
-          "aztec",
-          "data_matrix",
-          "pdf417",
-        ],
-      });
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-      streamRef.current = stream;
-      const video = videoRef.current;
-      if (!video) return;
-      video.srcObject = stream;
-      await video.play();
-      setScanning(true);
-
-      const tick = async () => {
-        if (!detectorRef.current || !videoRef.current) return;
-        try {
-          const codes = await detectorRef.current.detect(videoRef.current);
-          const value = codes[0]?.rawValue?.trim();
-          if (value) {
-            const now = Date.now();
-            // Debounce repeat scans of the same code.
-            if (
-              value !== lastScanRef.current.value ||
-              now - lastScanRef.current.at > 2500
-            ) {
-              lastScanRef.current = { value, at: now };
-              setSku(value);
-              lookup(value);
-            }
+      const scanner = new Html5Qrcode("niraga-scanner");
+      qrCodeRef.current = scanner;
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 160 } },
+        (decodedText) => {
+          const value = decodedText.trim();
+          if (!value) return;
+          const now = Date.now();
+          // Debounce repeat scans of the same code.
+          if (
+            value !== lastScanRef.current.value ||
+            now - lastScanRef.current.at > 2500
+          ) {
+            lastScanRef.current = { value, at: now };
+            setSku(value);
+            lookup(value);
           }
-        } catch {
-          // Frame not ready yet, keep looping.
-        }
-        rafRef.current = requestAnimationFrame(tick);
-      };
-      rafRef.current = requestAnimationFrame(tick);
+        },
+        () => {
+          // Per-frame decode errors are expected; ignore.
+        },
+      );
+      setScanning(true);
     } catch (err) {
       toast.error("Camera unavailable", {
         description:
@@ -277,11 +241,10 @@ export default function ScannerPageClient() {
 
               {/* Camera viewfinder */}
               <div className="relative overflow-hidden rounded-2xl border border-white/70 bg-gray-900 shadow-sm">
-                <video
-                  ref={videoRef}
-                  className="aspect-4/3 w-full object-cover sm:aspect-video"
-                  playsInline
-                  muted
+                <div
+                  id="niraga-scanner"
+                  ref={scannerRef}
+                  className="aspect-4/3 w-full sm:aspect-video [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
                 />
                 {!scanning && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gray-900/85 text-center">

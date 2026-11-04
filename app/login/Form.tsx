@@ -12,6 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { signIn, signUp } from "@/auth/action";
+import { version } from "@/package.json";
 
 type Tab = "login" | "register";
 
@@ -357,7 +358,7 @@ export default function AuthPage() {
 
         {/* Footer */}
         <p className="mt-6 text-center text-xs text-gray-400 select-none">
-          v0.2.0 • NIRAGA • Stock &amp; Inventory AI
+          v{version} • NIRAGA • Stock &amp; Inventory AI
         </p>
       </div>
     </div>
