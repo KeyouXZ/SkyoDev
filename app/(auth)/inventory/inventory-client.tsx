@@ -4,18 +4,11 @@ import { useState } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
-import {
-  AlertTriangle,
-  Box,
-  Download,
-  Pencil,
-  Plus,
-  Search,
-  Trash2,
-} from "lucide-react";
+import { AlertTriangle, Box, Download, Plus, Search } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Header } from "@/components/Header";
 import { ProductDialog } from "./product-dialog";
+import { RowActions } from "./row-actions";
 import { exportToCSV } from "@/lib/export-csv";
 import { fetcher, swrOptions } from "@/lib/fetcher";
 import type { CurrentUser } from "@/auth/currentUser";
@@ -140,35 +133,6 @@ export default function InventoryPageClient({ user }: Props) {
       </td>
     </tr>
   );
-
-  const RowActionsMenu = ({
-    product,
-    testPrefix,
-  }: {
-    product: ProductWithSupplier;
-    testPrefix: string;
-  }) => {
-    return (
-      <div className="flex items-center justify-end gap-1">
-        <button
-          onClick={() => setDialog({ open: true, product })}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
-          aria-label={`Edit ${product.name}`}
-          data-testid={`${testPrefix}-edit-${product.id}`}
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => handleDelete(product)}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-50 hover:text-red-600"
-          aria-label={`Delete ${product.name}`}
-          data-testid={`${testPrefix}-delete-${product.id}`}
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-[#ddf1f7] text-gray-800 p-3 sm:p-5 flex flex-col font-sans select-none antialiased">
@@ -332,9 +296,13 @@ export default function InventoryPageClient({ user }: Props) {
                             ${(p.price / 100).toFixed(2)}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <RowActionsMenu
+                            <RowActions
                               product={p}
                               testPrefix="button-actions"
+                              onEditAction={(prod) =>
+                                setDialog({ open: true, product: prod })
+                              }
+                              onDeleteAction={handleDelete}
                             />
                           </td>
                         </tr>
@@ -384,9 +352,13 @@ export default function InventoryPageClient({ user }: Props) {
                           </p>
                         </div>
                       </div>
-                      <RowActionsMenu
+                      <RowActions
                         product={p}
                         testPrefix="button-actions-mobile"
+                        onEditAction={(prod) =>
+                          setDialog({ open: true, product: prod })
+                        }
+                        onDeleteAction={handleDelete}
                       />
                     </div>
 

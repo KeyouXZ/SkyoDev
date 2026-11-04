@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { COOKIE_SESSION_KEY } from "@/auth/core/session";
 
-// Protected application routes based on StockMind demo & SKT
+// Protected application routes
 const protectedRoutes = [
   "/dashboard",
   "/inventory",
-  "/compositions",
   "/orders",
   "/purchase-orders",
   "/suppliers",
   "/sales",
+  "/sell",
   "/suggestions",
   "/scanner",
   "/profile",

@@ -52,20 +52,6 @@ export async function GET(_req: Request, { params }: Context) {
         reorderSuggestions: {
           where: { status: "pending" },
         },
-        parentComponents: {
-          include: {
-            componentProduct: {
-              select: { id: true, name: true, sku: true, stockLevel: true },
-            },
-          },
-        },
-        usedInComponents: {
-          include: {
-            parentProduct: {
-              select: { id: true, name: true, sku: true },
-            },
-          },
-        },
       },
     });
 

@@ -71,8 +71,6 @@ export async function GET(req: Request) {
         _count: {
           select: {
             sales: true,
-            parentComponents: true,
-            usedInComponents: true,
           },
         },
       },

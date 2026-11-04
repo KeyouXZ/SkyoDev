@@ -103,7 +103,6 @@ app/
     products/        # product CRUD
     sales/           # record and list sales
     purchase-orders/ # purchase order CRUD
-    compositions/    # bill of materials (bundles)
     suppliers/       # supplier CRUD
     scanner/         # SKU lookup
     suggestions/     # reorder suggestions
@@ -134,9 +133,8 @@ Every endpoint needs a logged-in session and only ever returns your own data.
 | `PUT` | `/api/products/[id]` | Update a product, including stock level. |
 | `DELETE` | `/api/products/[id]` | Delete a product. |
 | `GET` | `/api/sales` | List sales. Supports `productId` and `limit`. |
-| `POST` | `/api/sales` | Record a sale. Deducts stock, including bundle components. |
+| `POST` | `/api/sales` | Record a sale. Deducts stock. |
 | `GET` / `POST` | `/api/purchase-orders` | List or create purchase orders. |
-| `GET` / `POST` | `/api/compositions` | List or manage bill of materials. |
 | `GET` / `POST` | `/api/suppliers` | List or create suppliers. |
 | `GET` | `/api/scanner?sku=` | Look up a product by SKU for the scanner. |
 | `GET` | `/api/suggestions` | Pending reorder suggestions. |
@@ -148,7 +146,6 @@ Every endpoint needs a logged-in session and only ever returns your own data.
 ## Roadmap
 
 ### Coming next
-- **Compositions page.** The bill-of-materials API is ready, so the next step is a visual editor for bundles.
 - **Purchase orders page.** Create and track orders with line items and a draft to sent to received flow.
 - **Suggestions page.** A place to review reorder suggestions and turn them into purchase orders.
 - **Barcode labels.** Generate and print SKU labels with `jsbarcode`.

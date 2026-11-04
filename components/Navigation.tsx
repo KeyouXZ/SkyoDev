@@ -3,7 +3,7 @@
 import {
   LayoutDashboard,
   Box,
-  Layers,
+  Building2,
   ShoppingBag,
   ScanLine,
   Lightbulb,
@@ -17,7 +17,7 @@ import Link from "next/link";
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { name: "Inventory", icon: Box, href: "/inventory" },
-  { name: "Product Composition", icon: Layers, href: "/compositions" },
+  { name: "Suppliers", icon: Building2, href: "/suppliers" },
   { name: "Sell Products", icon: ShoppingBag, href: "/sell" },
   { name: "Barcode Scanner", icon: ScanLine, href: "/scanner" },
   { name: "AI Suggestions", icon: Lightbulb, href: "/suggestions" },

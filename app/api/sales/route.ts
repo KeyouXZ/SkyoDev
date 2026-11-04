@@ -138,20 +138,6 @@ export async function POST(req: Request) {
       }),
     ]);
 
-    // Bundle support: deduct component stock for each Bill of Materials entry.
-    const components = await prisma.productComponent.findMany({
-      where: { userId: user.id, parentProductId: productId },
-    });
-    for (const comp of components) {
-      const deduct = Math.ceil(quantity * Number(comp.quantity));
-      if (deduct > 0) {
-        await prisma.product.update({
-          where: { id: comp.componentProductId },
-          data: { stockLevel: { decrement: deduct } },
-        });
-      }
-    }
-
     // Check if stock dropped to or below reorderPoint
     if (updatedProduct.stockLevel <= updatedProduct.reorderPoint) {
       // 1. Create or check existing pending reorder suggestion
