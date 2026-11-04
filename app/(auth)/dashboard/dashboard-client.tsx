@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import {
   Box,
   ShoppingBag,
@@ -24,6 +26,9 @@ import { Navigation } from "@/components/Navigation";
 import { Header } from "@/components/Header";
 import type { CurrentUser } from "@/auth/currentUser";
 import { useUser } from "@/context/UserContext";
+import type { ProductWithSupplier } from "@/types/inventory";
+import { fetcher, swrOptions } from "@/lib/fetcher";
+import { useCountUp } from "@/hooks/useCountUp";
 
 const emptySubscribe = () => () => {};
 
@@ -35,15 +40,23 @@ function useMounted() {
   );
 }
 
-const salesData = [
-  { day: "Sat", revenue: 0, label: "0" },
-  { day: "Sun", revenue: 60, label: "60" },
-  { day: "Mon", revenue: 120, label: "120" },
-  { day: "Tue", revenue: 180, label: "180" },
-  { day: "Wed", revenue: 240, label: "240" },
-  { day: "Thu", revenue: 13.4, label: "13.4" },
-  { day: "Today", revenue: 84.6, label: "84.6" },
-];
+interface PurchaseOrder {
+  id: number;
+  status: string;
+}
+
+interface SaleRecord {
+  id: number;
+  quantity: number;
+  saleDate: string;
+  product?: { price: number } | null;
+}
+
+interface DayRevenue {
+  day: string;
+  revenue: number;
+  label: string;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomPointLabel = (props: any) => {
@@ -72,7 +85,89 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
   const contextUser = useUser();
   const user = propUser ?? contextUser;
   const mounted = useMounted();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const { data: products = [], isLoading: productsLoading } = useSWR<
+    ProductWithSupplier[]
+  >("/api/products", fetcher, swrOptions);
+  const { data: orders = [] } = useSWR<PurchaseOrder[]>(
+    "/api/purchase-orders",
+    fetcher,
+    swrOptions,
+  );
+  const { data: sales = [] } = useSWR<SaleRecord[]>(
+    "/api/sales?limit=500",
+    fetcher,
+    swrOptions,
+  );
+
+  const loading = productsLoading;
+
+  const stats = useMemo(() => {
+    const lowStock = products.filter(
+      (p) => p.stockLevel <= p.reorderPoint,
+    ).length;
+    const pending = orders.filter((o) => o.status !== "received").length;
+    const draft = orders.filter((o) => o.status === "draft").length;
+    const sent = orders.filter((o) => o.status === "sent").length;
+    const inventoryValue = products.reduce(
+      (sum, p) => sum + p.stockLevel * p.cost,
+      0,
+    );
+    const totalUnits = products.reduce((sum, p) => sum + p.stockLevel, 0);
+    return {
+      totalProducts: products.length,
+      lowStock,
+      pending,
+      draft,
+      sent,
+      inventoryValue: inventoryValue / 100,
+      totalUnits,
+    };
+  }, [products, orders]);
+
+  const salesChartData = useMemo<DayRevenue[]>(() => {
+    const days: { date: string; day: string; revenue: number }[] = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      days.push({
+        date: d.toISOString().slice(0, 10),
+        day:
+          i === 0
+            ? "Today"
+            : d.toLocaleDateString("en-US", { weekday: "short" }),
+        revenue: 0,
+      });
+    }
+
+    for (const sale of sales) {
+      const saleDay = new Date(sale.saleDate).toISOString().slice(0, 10);
+      const entry = days.find((d) => d.date === saleDay);
+      if (entry) {
+        entry.revenue += (sale.quantity * (sale.product?.price ?? 0)) / 100;
+      }
+    }
+
+    return days.map((d) => ({
+      day: d.day,
+      revenue: Number(d.revenue.toFixed(2)),
+      label: d.revenue.toFixed(1),
+    }));
+  }, [sales]);
+
+  const yMax = useMemo(() => {
+    const max = Math.max(...salesChartData.map((d) => d.revenue), 0);
+    return Math.max(Math.ceil(max / 100) * 100, 100);
+  }, [salesChartData]);
+
+  // Animated counters
+  const animatedProducts = useCountUp(stats.totalProducts);
+  const animatedLowStock = useCountUp(stats.lowStock);
+  const animatedPending = useCountUp(stats.pending);
+  const animatedValue = useCountUp(stats.inventoryValue);
 
   const quickActions = [
     {
@@ -80,24 +175,28 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
       subtitle: "See reorder suggestions",
       icon: TrendingUp,
       iconBg: "bg-[#cfe9f8] text-[#0284c7]",
+      href: "/suggestions",
     },
     {
       title: "View Sales Forecast",
       subtitle: "Project the next 30 days",
       icon: LineChartIcon,
       iconBg: "bg-[#c7f0f6] text-[#0891b2]",
+      href: "/suggestions",
     },
     {
       title: "Sell Products",
       subtitle: "Record a sell",
       icon: ShoppingBag,
       iconBg: "bg-[#d1fae5] text-[#10b981]",
+      href: "/sell",
     },
     {
       title: "Barcode Scanner",
       subtitle: "Scan to receive or sell",
       icon: ScanLine,
       iconBg: "bg-[#ffedd5] text-[#f97316]",
+      href: "/scanner",
     },
   ];
 
@@ -125,13 +224,14 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
                 <Box className="h-5 w-5 text-[#2563eb]" />
               </div>
               <div className="my-2.5">
-                <span className="text-3xl font-bold tracking-tight text-gray-900">
-                  15
+                <span className="text-3xl font-bold tracking-tight text-gray-900 tabular-nums">
+                  {loading ? "—" : Math.round(animatedProducts)}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="font-semibold text-emerald-500">+ 12%</span>
-                <span className="text-gray-500">vs last month</span>
+                <span className="text-gray-500">
+                  {loading ? "" : `${stats.totalUnits} units in stock`}
+                </span>
               </div>
             </div>
 
@@ -143,15 +243,22 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
                 <AlertTriangle className="h-5 w-5 text-[#ef4444]" />
               </div>
               <div className="my-2.5">
-                <span className="text-3xl font-bold tracking-tight text-gray-900">
-                  3
+                <span className="text-3xl font-bold tracking-tight text-gray-900 tabular-nums">
+                  {loading ? "—" : Math.round(animatedLowStock)}
                 </span>
               </div>
               <div className="flex items-baseline gap-1.5 text-xs">
-                <span className="font-semibold leading-tight text-red-500">
-                  Requires attention
-                </span>
-                <span className="text-gray-500">vs last month</span>
+                {loading ? (
+                  <span className="text-gray-500">Loading…</span>
+                ) : stats.lowStock > 0 ? (
+                  <span className="font-semibold leading-tight text-red-500">
+                    Requires attention
+                  </span>
+                ) : (
+                  <span className="font-semibold leading-tight text-emerald-500">
+                    All stocked
+                  </span>
+                )}
               </div>
             </div>
 
@@ -163,12 +270,14 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
                 <ShoppingCart className="h-5 w-5 text-gray-800" />
               </div>
               <div className="my-2.5">
-                <span className="text-3xl font-bold tracking-tight text-gray-900">
-                  2
+                <span className="text-3xl font-bold tracking-tight text-gray-900 tabular-nums">
+                  {loading ? "—" : Math.round(animatedPending)}
                 </span>
               </div>
-              <div className="select-none text-xs text-transparent">
-                placeholder
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="text-gray-500">
+                  {loading ? "" : `${stats.draft} draft · ${stats.sent} sent`}
+                </span>
               </div>
             </div>
 
@@ -180,13 +289,17 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
                 <DollarSign className="h-5 w-5 text-[#10b981]" />
               </div>
               <div className="my-2.5">
-                <span className="text-3xl font-bold tracking-tight text-gray-900">
-                  $ 1,628.80
+                <span className="text-3xl font-bold tracking-tight text-gray-900 tabular-nums">
+                  {loading
+                    ? "—"
+                    : `$ ${animatedValue.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="font-semibold text-emerald-500">+ 5.2%</span>
-                <span className="text-gray-500">vs last month</span>
+                <span className="text-gray-500">at cost</span>
               </div>
             </div>
           </div>
@@ -208,7 +321,7 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
                   {mounted ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart
-                        data={salesData}
+                        data={salesChartData}
                         margin={{ top: 22, right: 24, left: -10, bottom: 5 }}
                       >
                         <CartesianGrid
@@ -225,8 +338,7 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
                           dy={6}
                         />
                         <YAxis
-                          domain={[0, 300]}
-                          ticks={[0, 100, 200, 300]}
+                          domain={[0, yMax]}
                           axisLine={false}
                           tickLine={false}
                           tick={{ fill: "#64748b", fontSize: 11 }}
@@ -234,7 +346,7 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
                         <Tooltip
                           // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           formatter={(val: any) => [
-                            `$${Number(val ?? 0).toFixed(1)}`,
+                            `$${Number(val ?? 0).toFixed(2)}`,
                             "Revenue",
                           ]}
                           contentStyle={{
@@ -289,6 +401,7 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
                   return (
                     <button
                       key={action.title}
+                      onClick={() => router.push(action.href)}
                       className="group flex w-full cursor-pointer items-center gap-3.5 rounded-2xl border border-white/70 bg-linear-to-r from-[#d8eef9] to-[#cae7f7] p-3 px-4 text-left shadow-xs transition-all duration-150 hover:translate-x-0.5 hover:shadow-md"
                     >
                       <div

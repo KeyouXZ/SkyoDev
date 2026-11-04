@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import {
   AlertTriangle,
   Box,
   Download,
-  MoreVertical,
   Pencil,
   Plus,
   Search,
@@ -16,6 +17,7 @@ import { Navigation } from "@/components/Navigation";
 import { Header } from "@/components/Header";
 import { ProductDialog } from "./product-dialog";
 import { exportToCSV } from "@/lib/export-csv";
+import { fetcher, swrOptions } from "@/lib/fetcher";
 import type { CurrentUser } from "@/auth/currentUser";
 import type { ProductWithSupplier, SupplierSummary } from "@/types/inventory";
 
@@ -28,10 +30,22 @@ type DialogState = { open: boolean; product: ProductWithSupplier | null };
 export default function InventoryPageClient({ user }: Props) {
   const searchParams = useSearchParams();
 
-  const [products, setProducts] = useState<ProductWithSupplier[]>([]);
-  const [suppliers, setSuppliers] = useState<SupplierSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const {
+    data: products = [],
+    mutate: mutateProducts,
+    isLoading: loading,
+    error: productsError,
+  } = useSWR<ProductWithSupplier[]>("/api/products", fetcher, swrOptions);
+  const { data: suppliers = [] } = useSWR<SupplierSummary[]>(
+    "/api/suppliers",
+    fetcher,
+    swrOptions,
+  );
+  const loadError = productsError
+    ? productsError instanceof Error
+      ? productsError.message
+      : "Something went wrong"
+    : null;
 
   const [search, setSearch] = useState("");
   const [lowStockOnly, setLowStockOnly] = useState(
@@ -42,78 +56,6 @@ export default function InventoryPageClient({ user }: Props) {
     open: false,
     product: null,
   });
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  // Data loading
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadInitialData = async () => {
-      try {
-        const [productsRes, suppliersRes] = await Promise.all([
-          fetch("/api/products"),
-          fetch("/api/suppliers"),
-        ]);
-
-        if (!productsRes.ok) {
-          throw new Error(`Failed to load products (${productsRes.status})`);
-        }
-
-        const productsData: ProductWithSupplier[] = await productsRes.json();
-        const suppliersData: SupplierSummary[] = suppliersRes.ok
-          ? await suppliersRes.json()
-          : [];
-
-        if (isMounted) {
-          setProducts(productsData);
-          setSuppliers(suppliersData);
-          setLoadError(null);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setLoadError(
-            err instanceof Error ? err.message : "Something went wrong",
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadInitialData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      const res = await fetch("/api/products");
-      if (!res.ok) throw new Error(`Failed to load products (${res.status})`);
-      const data: ProductWithSupplier[] = await res.json();
-      setProducts(data);
-      setLoadError(null);
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Close row action menus when clicking outside
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenMenuId(null);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   // Filtering
   const filtered = products.filter((p) => {
@@ -140,10 +82,12 @@ export default function InventoryPageClient({ user }: Props) {
       })),
       "inventory",
     );
+    toast.success("Export ready", {
+      description: `${filtered.length} products exported to CSV.`,
+    });
   };
 
   const handleDelete = async (product: ProductWithSupplier) => {
-    setOpenMenuId(null);
     if (!window.confirm("Are you sure you want to delete this product?"))
       return;
 
@@ -155,9 +99,17 @@ export default function InventoryPageClient({ user }: Props) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "Failed to delete product");
       }
-      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      await mutateProducts(
+        (current) => (current ?? []).filter((p) => p.id !== product.id),
+        { revalidate: true },
+      );
+      toast.success("Product deleted", {
+        description: `${product.name} has been removed.`,
+      });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Something went wrong");
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+      toast.error("Could not delete product", { description: message });
     }
   };
 
@@ -196,42 +148,24 @@ export default function InventoryPageClient({ user }: Props) {
     product: ProductWithSupplier;
     testPrefix: string;
   }) => {
-    const isOpen = openMenuId === product.id;
     return (
-      <div
-        ref={isOpen ? menuRef : undefined}
-        className="relative inline-block text-right"
-      >
+      <div className="flex items-center justify-end gap-1">
         <button
-          onClick={() => setOpenMenuId(isOpen ? null : product.id)}
-          className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 ${isOpen ? "bg-gray-100 text-gray-800" : ""}`}
-          aria-label={`Actions for ${product.name}`}
-          data-testid={`${testPrefix}-${product.id}`}
+          onClick={() => setDialog({ open: true, product })}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+          aria-label={`Edit ${product.name}`}
+          data-testid={`${testPrefix}-edit-${product.id}`}
         >
-          <MoreVertical className="h-4 w-4" />
+          <Pencil className="h-4 w-4" />
         </button>
-
-        {isOpen && (
-          <div className="absolute right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border border-gray-100 bg-white py-1 text-sm shadow-lg">
-            <button
-              onClick={() => {
-                setOpenMenuId(null);
-                setDialog({ open: true, product });
-              }}
-              className="flex w-full cursor-pointer items-center gap-2 px-3.5 py-2 text-left text-gray-700 hover:bg-slate-50"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit Details
-            </button>
-            <button
-              onClick={() => handleDelete(product)}
-              className="flex w-full cursor-pointer items-center gap-2 px-3.5 py-2 text-left text-red-600 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </button>
-          </div>
-        )}
+        <button
+          onClick={() => handleDelete(product)}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-50 hover:text-red-600"
+          aria-label={`Delete ${product.name}`}
+          data-testid={`${testPrefix}-delete-${product.id}`}
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
     );
   };
@@ -254,7 +188,7 @@ export default function InventoryPageClient({ user }: Props) {
           <div className="mb-5 mt-5 flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
             <div className="flex flex-wrap items-center gap-2">
               {/* Search */}
-              <div className="relative w-full sm:w-72">
+              <div className="relative w-full sm:w-72 z-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   placeholder="Search products..."
@@ -488,13 +422,16 @@ export default function InventoryPageClient({ user }: Props) {
         </main>
       </div>
 
-      {/* Add / Edit Product Dialog */}
+      {/* Add / Edit Product Dialog  */}
       <ProductDialog
+        key={dialog.product?.id ?? "new"}
         open={dialog.open}
         product={dialog.product}
         suppliers={suppliers}
-        onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
-        onSaved={fetchProducts}
+        onOpenChange={(open) =>
+          setDialog((d) => ({ ...d, open, product: open ? d.product : null }))
+        }
+        onSaved={() => mutateProducts()}
       />
     </div>
   );

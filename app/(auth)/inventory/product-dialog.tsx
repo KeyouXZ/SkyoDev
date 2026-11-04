@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import type {
   ProductFormData,
@@ -144,15 +145,20 @@ export function ProductDialog({
 
       onSaved();
 
+      toast.success(isEdit ? "Product updated" : "Product created", {
+        description: `${form.name.trim()} has been saved.`,
+      });
+
       setForm(toFormValues(null));
       setErrors({});
       setServerError(null);
 
       onOpenChange(false);
     } catch (err) {
-      setServerError(
-        err instanceof Error ? err.message : "Something went wrong",
-      );
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+      setServerError(message);
+      toast.error("Could not save product", { description: message });
     } finally {
       setSubmitting(false);
     }
