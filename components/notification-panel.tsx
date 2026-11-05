@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell, Check, X, AlertTriangle, Lightbulb } from "lucide-react";
+import { usePreferences } from "@/context/PreferencesContext";
 
 export interface LowStockProduct {
   id: number;
@@ -42,12 +43,13 @@ export function NotificationPanel({
   pushActive: boolean;
   onCloseAction: () => void;
 }) {
+  const { t } = usePreferences();
   return (
     <div className="absolute right-0 top-12 z-50 w-80 max-w-[calc(100vw-2rem)] animate-in fade-in slide-in-from-top-2 rounded-2xl border border-gray-100 bg-white p-3.5 text-xs shadow-xl duration-150">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2 font-semibold text-gray-900">
           <Bell className="h-4 w-4 text-gray-500" />
-          <span>Notifications</span>
+          <span>{t("notifications.title")}</span>
         </div>
         <button
           onClick={onCloseAction}
@@ -60,23 +62,22 @@ export function NotificationPanel({
       {pushActive && (
         <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2 py-1.5 font-medium text-emerald-700">
           <Check className="h-3.5 w-3.5" />
-          <span>Web Push Active</span>
+          <span>{t("notifications.pushActive")}</span>
         </div>
       )}
 
       {!notifications ? (
-        <p className="mt-2 text-gray-500">Loading notifications…</p>
+        <p className="mt-2 text-gray-500">{t("notifications.loading")}</p>
       ) : alertCount === 0 ? (
-        <p className="mt-2 text-gray-500">
-          No alerts. Stock levels and reorder suggestions look healthy.
-        </p>
+        <p className="mt-2 text-gray-500">{t("notifications.noAlerts")}</p>
       ) : (
         <div className="mt-2 max-h-64 space-y-3 overflow-y-auto pr-1">
           {notifications.alerts.lowStockCount > 0 && (
             <div>
               <p className="flex items-center gap-1.5 font-semibold text-red-600">
                 <AlertTriangle className="h-3.5 w-3.5" />
-                Low stock ({notifications.alerts.lowStockCount})
+                {t("notifications.lowStock")} (
+                {notifications.alerts.lowStockCount})
               </p>
               <ul className="mt-1 space-y-1">
                 {notifications.alerts.lowStockProducts.map((p) => (
@@ -88,7 +89,7 @@ export function NotificationPanel({
                       {p.name}
                     </span>
                     <span className="shrink-0 font-semibold text-red-600">
-                      {p.stockLevel} left
+                      {p.stockLevel} {t("notifications.left")}
                     </span>
                   </li>
                 ))}
@@ -100,7 +101,7 @@ export function NotificationPanel({
             <div>
               <p className="flex items-center gap-1.5 font-semibold text-amber-600">
                 <Lightbulb className="h-3.5 w-3.5" />
-                Reorder suggestions (
+                {t("notifications.reorderSuggestions")} (
                 {notifications.alerts.pendingSuggestionsCount})
               </p>
               <ul className="mt-1 space-y-1">

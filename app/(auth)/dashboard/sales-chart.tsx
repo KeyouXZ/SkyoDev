@@ -9,6 +9,8 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { usePreferences } from "@/context/PreferencesContext";
+import { formatDollars } from "@/lib/format";
 
 export interface DayRevenue {
   day: string;
@@ -39,18 +41,43 @@ export function SalesChart({
   data,
   yMax,
   mounted,
+  days,
+  onDaysChangeAction,
 }: {
   data: DayRevenue[];
   yMax: number;
   mounted: boolean;
+  days: number;
+  onDaysChangeAction: (days: number) => void;
 }) {
+  const { t, currency } = usePreferences();
+  const ranges = [7, 14, 30];
   return (
     <div className="flex flex-col rounded-3xl border border-white/60 bg-[#d8eff9] p-5 shadow-xs lg:col-span-8 sm:p-6">
-      <div className="mb-4">
-        <h3 className="text-xl font-bold tracking-tight text-gray-900">
-          Sales Overview
-        </h3>
-        <p className="mt-0.5 text-xs text-gray-500">Last 7 days revenue</p>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-bold tracking-tight text-gray-900">
+            {t("dashboard.salesOverview")}
+          </h3>
+          <p className="mt-0.5 text-xs text-gray-500">
+            {t("dashboard.lastDaysRevenue", { days })}
+          </p>
+        </div>
+        <div className="flex gap-1.5 rounded-2xl border border-white/60 bg-white/60 p-1.5 shadow-xs backdrop-blur-md">
+          {ranges.map((r) => (
+            <button
+              key={r}
+              onClick={() => onDaysChangeAction(r)}
+              className={`cursor-pointer rounded-xl px-3.5 py-1.5 text-sm font-medium transition-all ${
+                days === r
+                  ? "bg-[#00a2be] text-white shadow-sm"
+                  : "text-gray-600 hover:bg-white/70 hover:text-gray-900"
+              }`}
+            >
+              {r}d
+            </button>
+          ))}
+        </div>
       </div>
       <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
         <div className="h-64 w-full sm:h-72">
@@ -82,8 +109,8 @@ export function SalesChart({
                 <Tooltip
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(val: any) => [
-                    `$${Number(val ?? 0).toFixed(2)}`,
-                    "Revenue",
+                    formatDollars(Number(val ?? 0), currency),
+                    t("forecast.revenue"),
                   ]}
                   contentStyle={{
                     backgroundColor: "#ffffff",
@@ -116,7 +143,7 @@ export function SalesChart({
             </ResponsiveContainer>
           ) : (
             <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
-              Loading chart...
+              {t("common.loading")}
             </div>
           )}
         </div>

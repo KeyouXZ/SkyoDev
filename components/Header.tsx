@@ -12,8 +12,10 @@ import {
 import { signOut } from "@/auth/action";
 import type { CurrentUser } from "@/auth/currentUser";
 import { useUser } from "@/context/UserContext";
+import { usePreferences } from "@/context/PreferencesContext";
 import { fetcher, swrOptions } from "@/lib/fetcher";
 import { NotificationPanel, type NotificationData } from "./notification-panel";
+import { PreferencesSwitcher } from "./PreferencesSwitcher";
 
 export interface HeaderProps {
   title?: string;
@@ -33,6 +35,7 @@ export function Header({
   children,
 }: HeaderProps) {
   const contextUser = useUser();
+  const { t } = usePreferences();
   const user = propUser ?? contextUser;
   const [showNotificationToast, setShowNotificationToast] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -72,11 +75,12 @@ export function Header({
       </div>
 
       <div className="relative flex shrink-0 items-center gap-2.5">
+        <PreferencesSwitcher />
         {/* Notification Bell */}
         <button
           onClick={() => setShowNotificationToast(!showNotificationToast)}
           className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-gray-100 bg-white text-gray-600 shadow-xs transition-all hover:text-gray-900 hover:shadow-sm sm:h-10 sm:w-10"
-          aria-label="Notifications"
+          aria-label={t("header.notifications")}
         >
           <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
           {alertCount > 0 && (
@@ -122,7 +126,7 @@ export function Header({
                   onClick={() => setUserDropdownOpen(false)}
                   className="flex w-full items-center justify-between px-4 py-2 text-left text-xs text-gray-700 hover:bg-slate-50"
                 >
-                  Account Settings
+                  {t("header.accountSettings")}
                 </button>
                 <form action={signOut}>
                   <button
@@ -130,7 +134,7 @@ export function Header({
                     className="flex w-full items-center gap-2 px-4 py-2 text-left text-xs text-red-600 hover:bg-slate-50"
                   >
                     <LogOut className="h-3.5 w-3.5" />
-                    Sign Out
+                    {t("header.signOut")}
                   </button>
                 </form>
               </div>

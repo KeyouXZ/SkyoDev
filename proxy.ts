@@ -10,7 +10,7 @@ const protectedRoutes = [
   "/suppliers",
   "/sales",
   "/sell",
-  "/suggestions",
+  "/forecast",
   "/scanner",
   "/profile",
 ];

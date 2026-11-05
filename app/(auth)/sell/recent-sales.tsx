@@ -1,15 +1,14 @@
 "use client";
 
 import { History, ShoppingBag } from "lucide-react";
+import { usePreferences } from "@/context/PreferencesContext";
+import { formatCurrency, formatDate } from "@/lib/format";
+import type { SaleRecord } from "./types";
 
-export interface SaleRecord {
-  id: number;
-  quantity: number;
-  saleDate: string;
-  product?: { id: number; name: string; sku: string; price: number } | null;
-}
+export type { SaleRecord } from "./types";
 
 export function RecentSales({ sales }: { sales: SaleRecord[] }) {
+  const { t, currency, locale } = usePreferences();
   return (
     <div className="flex flex-col rounded-3xl border border-white/60 bg-[#d8eff9] p-5 shadow-xs sm:p-6">
       <div className="mb-4 flex items-center gap-2.5">
@@ -18,10 +17,10 @@ export function RecentSales({ sales }: { sales: SaleRecord[] }) {
         </div>
         <div>
           <h3 className="text-xl font-bold tracking-tight text-gray-900">
-            Recent Sales
+            {t("sell.recentSales")}
           </h3>
           <p className="mt-0.5 text-xs text-gray-500">
-            Latest recorded transactions
+            {t("sell.latestTransactions")}
           </p>
         </div>
       </div>
@@ -29,7 +28,7 @@ export function RecentSales({ sales }: { sales: SaleRecord[] }) {
       <div className="space-y-2.5">
         {sales.length === 0 ? (
           <div className="rounded-2xl border border-white/70 bg-white/50 p-8 text-center text-sm text-gray-400">
-            No sales recorded yet.
+            {t("sell.noSales")}
           </div>
         ) : (
           sales.slice(0, 15).map((s) => (
@@ -45,9 +44,10 @@ export function RecentSales({ sales }: { sales: SaleRecord[] }) {
                   {s.product?.name ?? `Product #${s.product?.id ?? ""}`}
                 </p>
                 <p className="mt-0.5 truncate text-xs text-gray-500">
-                  {s.quantity} × ${((s.product?.price ?? 0) / 100).toFixed(2)}
+                  {s.quantity} ×{" "}
+                  {formatCurrency(s.product?.price ?? 0, currency)}
                   <span className="mx-1 text-gray-300">·</span>
-                  {new Date(s.saleDate).toLocaleDateString("en-US", {
+                  {formatDate(s.saleDate, locale, {
                     month: "short",
                     day: "numeric",
                     hour: "numeric",
@@ -56,7 +56,7 @@ export function RecentSales({ sales }: { sales: SaleRecord[] }) {
                 </p>
               </div>
               <span className="shrink-0 text-sm font-bold tabular-nums text-[#00a2be]">
-                ${((s.quantity * (s.product?.price ?? 0)) / 100).toFixed(2)}
+                {formatCurrency(s.quantity * (s.product?.price ?? 0), currency)}
               </span>
             </div>
           ))

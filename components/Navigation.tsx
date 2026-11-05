@@ -6,22 +6,27 @@ import {
   Building2,
   ShoppingBag,
   ScanLine,
-  Lightbulb,
+  TrendingUp,
   ShoppingCart,
   X,
 } from "lucide-react";
 import { version } from "@/package.json";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { usePreferences } from "@/context/PreferencesContext";
 
 const navItems = [
-  { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { name: "Inventory", icon: Box, href: "/inventory" },
-  { name: "Suppliers", icon: Building2, href: "/suppliers" },
-  { name: "Sell Products", icon: ShoppingBag, href: "/sell" },
-  { name: "Barcode Scanner", icon: ScanLine, href: "/scanner" },
-  { name: "AI Suggestions", icon: Lightbulb, href: "/suggestions" },
-  { name: "Purchase Orders", icon: ShoppingCart, href: "/purchase-orders" },
+  { nameKey: "nav.dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { nameKey: "nav.inventory", icon: Box, href: "/inventory" },
+  { nameKey: "nav.suppliers", icon: Building2, href: "/suppliers" },
+  { nameKey: "nav.sell", icon: ShoppingBag, href: "/sell" },
+  { nameKey: "nav.scanner", icon: ScanLine, href: "/scanner" },
+  { nameKey: "nav.forecast", icon: TrendingUp, href: "/forecast" },
+  {
+    nameKey: "nav.purchaseOrders",
+    icon: ShoppingCart,
+    href: "/purchase-orders",
+  },
 ];
 
 interface NavigationProps {
@@ -30,6 +35,7 @@ interface NavigationProps {
 }
 
 export function Navigation({ sidebarOpen, setSidebarOpen }: NavigationProps) {
+  const { t } = usePreferences();
   const pathname = usePathname();
 
   const isActiveItem = (href: string) =>
@@ -80,7 +86,7 @@ export function Navigation({ sidebarOpen, setSidebarOpen }: NavigationProps) {
 
               return (
                 <Link
-                  key={item.name}
+                  key={item.nameKey}
                   href={item.href}
                   onClick={() => {
                     setSidebarOpen(false);
@@ -98,7 +104,7 @@ export function Navigation({ sidebarOpen, setSidebarOpen }: NavigationProps) {
                   <Icon
                     className={`h-5 w-5 shrink-0 ${isActive ? "text-gray-800" : "text-white"}`}
                   />
-                  <span className="truncate">{item.name}</span>
+                  <span className="truncate">{t(item.nameKey)}</span>
                 </Link>
               );
             })}

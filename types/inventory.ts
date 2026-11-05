@@ -19,6 +19,7 @@ export interface ProductWithSupplier {
   reorderPoint: number;
   leadTimeDays: number;
   lastRestockDate?: string | null;
+  createdAt?: string;
   supplierId?: number | null;
   supplier?: SupplierSummary | null;
 }

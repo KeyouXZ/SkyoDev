@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/auth/currentUser";
 import { UserProvider } from "@/context/UserContext";
+import { PreferencesProvider } from "@/context/PreferencesContext";
 import { Suspense } from "react";
 import LoadingPage from "@/components/Suspense";
 import { PushProvider } from "@/components/PushProvider";
@@ -16,7 +17,9 @@ export default async function AuthLayout({
   return (
     <Suspense fallback={<LoadingPage />}>
       <UserProvider value={user}>
-        <PushProvider>{children}</PushProvider>
+        <PreferencesProvider>
+          <PushProvider>{children}</PushProvider>
+        </PreferencesProvider>
       </UserProvider>
     </Suspense>
   );

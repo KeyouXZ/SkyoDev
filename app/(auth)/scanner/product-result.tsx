@@ -1,25 +1,11 @@
 "use client";
 
 import { Package, Plus, ShoppingBag, AlertTriangle, Check } from "lucide-react";
+import { usePreferences } from "@/context/PreferencesContext";
+import { formatCurrency } from "@/lib/format";
+import type { ScanResult } from "./types";
 
-export interface ScannedProduct {
-  id: number;
-  sku: string;
-  name: string;
-  description?: string | null;
-  category?: string | null;
-  price: number;
-  cost: number;
-  stockLevel: number;
-  reorderPoint: number;
-  supplier?: { id: number; name: string; phone?: string | null } | null;
-}
-
-export interface ScanResult {
-  product: ScannedProduct;
-  isLowStock: boolean;
-  hasPendingSuggestion: boolean;
-}
+export type { ScanResult, ScannedProduct } from "./types";
 
 export function ProductResult({
   result,
@@ -36,6 +22,7 @@ export function ProductResult({
   onReceiveAction: () => void;
   onSellAction: () => void;
 }) {
+  const { t, currency } = usePreferences();
   const p = result.product;
 
   return (
@@ -56,13 +43,13 @@ export function ProductResult({
           </div>
         </div>
         <span className="shrink-0 text-base font-bold text-gray-900">
-          ${(p.price / 100).toFixed(2)}
+          {formatCurrency(p.price, currency)}
         </span>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 text-center">
         <div className="rounded-xl bg-slate-50 px-2 py-2.5">
-          <p className="text-xs text-gray-500">In stock</p>
+          <p className="text-xs text-gray-500">{t("scanner.inStock")}</p>
           <p
             className={`mt-0.5 text-sm font-bold ${
               result.isLowStock ? "text-red-600" : "text-gray-900"
@@ -72,7 +59,7 @@ export function ProductResult({
           </p>
         </div>
         <div className="rounded-xl bg-slate-50 px-2 py-2.5">
-          <p className="text-xs text-gray-500">Reorder point</p>
+          <p className="text-xs text-gray-500">{t("scanner.reorderPoint")}</p>
           <p className="mt-0.5 text-sm font-bold text-gray-900">
             {p.reorderPoint}
           </p>
@@ -82,16 +69,14 @@ export function ProductResult({
       {result.isLowStock && (
         <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-          Low stock — at or below reorder point.
-          {result.hasPendingSuggestion
-            ? " A reorder suggestion is pending."
-            : ""}
+          {t("scanner.lowStock")}
+          {result.hasPendingSuggestion ? t("scanner.reorderPending") : ""}
         </p>
       )}
 
       {p.supplier && (
         <p className="mt-3 text-xs text-gray-500">
-          Supplier:{" "}
+          {t("scanner.supplier")}:{" "}
           <span className="font-medium text-gray-700">{p.supplier.name}</span>
           {p.supplier.phone ? ` · ${p.supplier.phone}` : ""}
         </p>
@@ -101,7 +86,9 @@ export function ProductResult({
       <div className="mt-4 space-y-2.5">
         <div className="flex items-center gap-2">
           <div className="flex flex-1 items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Receive</span>
+            <span className="text-sm font-medium text-gray-700">
+              {t("scanner.receive")}
+            </span>
             <input
               type="number"
               min={1}
@@ -113,7 +100,7 @@ export function ProductResult({
               }
               className="h-10 w-20 rounded-xl border border-gray-200 bg-white text-center text-sm font-semibold text-gray-900 shadow-xs outline-none focus:border-[#00a2be] focus:ring-2 focus:ring-[#00a2be]/20"
             />
-            <span className="text-xs text-gray-500">units</span>
+            <span className="text-xs text-gray-500">{t("scanner.units")}</span>
           </div>
           <button
             onClick={onReceiveAction}
@@ -121,7 +108,7 @@ export function ProductResult({
             className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
-            Receive
+            {t("scanner.receive")}
           </button>
         </div>
         <button
@@ -130,11 +117,11 @@ export function ProductResult({
           className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#00a2be] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#008ea6] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ShoppingBag className="h-4 w-4" />
-          Sell 1 — ${(p.price / 100).toFixed(2)}
+          {t("scanner.sell1")} — {formatCurrency(p.price, currency)}
         </button>
         <p className="flex items-center justify-center gap-1 text-center text-xs text-gray-400">
           <Check className="h-3 w-3" />
-          Selling deducts stock automatically.
+          {t("scanner.sellingDeducts")}
         </p>
       </div>
     </div>
