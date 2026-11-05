@@ -9,6 +9,7 @@ import type { ProductWithSupplier } from "@/types/inventory";
 interface InventoryMobileCardsProps {
   filtered: ProductWithSupplier[];
   loading: boolean;
+  deletingId?: number | null;
   onEditAction: (product: ProductWithSupplier) => void;
   onDeleteAction: (product: ProductWithSupplier) => void;
 }
@@ -16,6 +17,7 @@ interface InventoryMobileCardsProps {
 export function InventoryMobileCards({
   filtered,
   loading,
+  deletingId,
   onEditAction,
   onDeleteAction,
 }: InventoryMobileCardsProps) {
@@ -42,7 +44,9 @@ export function InventoryMobileCards({
             <div
               key={p.id}
               data-testid={`card-product-${p.id}`}
-              className="rounded-2xl border border-white/60 bg-white p-4 shadow-sm"
+              className={`rounded-2xl border border-white/60 bg-white p-4 shadow-sm ${
+                deletingId === p.id ? "opacity-60" : ""
+              }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-start gap-3">
@@ -59,6 +63,7 @@ export function InventoryMobileCards({
                 <RowActions
                   product={p}
                   testPrefix="button-actions-mobile"
+                  busy={deletingId === p.id}
                   onEditAction={onEditAction}
                   onDeleteAction={onDeleteAction}
                 />

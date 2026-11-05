@@ -38,6 +38,7 @@ interface InventoryTableProps {
   products: ProductWithSupplier[];
   filtered: ProductWithSupplier[];
   loading: boolean;
+  deletingId?: number | null;
   onEditAction: (product: ProductWithSupplier) => void;
   onDeleteAction: (product: ProductWithSupplier) => void;
 }
@@ -46,6 +47,7 @@ export function InventoryTable({
   products,
   filtered,
   loading,
+  deletingId,
   onEditAction,
   onDeleteAction,
 }: InventoryTableProps) {
@@ -101,7 +103,9 @@ export function InventoryTable({
                 return (
                   <tr
                     key={p.id}
-                    className="group border-b border-gray-50 transition-colors last:border-0 hover:bg-slate-50/70"
+                    className={`group border-b border-gray-50 transition-colors last:border-0 hover:bg-slate-50/70 ${
+                      deletingId === p.id ? "opacity-60" : ""
+                    }`}
                   >
                     <td className="px-4 py-3 font-medium text-gray-900">
                       {p.name}
@@ -138,6 +142,7 @@ export function InventoryTable({
                       <RowActions
                         product={p}
                         testPrefix="button-actions"
+                        busy={deletingId === p.id}
                         onEditAction={onEditAction}
                         onDeleteAction={onDeleteAction}
                       />

@@ -33,7 +33,7 @@ export function ForecastControls({
           </p>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto">
         <div className="flex gap-1.5 rounded-2xl border border-white/60 bg-white/60 p-1.5 shadow-xs backdrop-blur-md">
           {(["revenue", "units"] as Metric[]).map((m) => (
             <button

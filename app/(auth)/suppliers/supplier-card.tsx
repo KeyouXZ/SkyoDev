@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Loader2,
   Pencil,
   Trash2,
   Building2,
@@ -27,7 +28,11 @@ export function SupplierCard({
 }: SupplierCardProps) {
   const { t } = usePreferences();
   return (
-    <div className="flex flex-col rounded-2xl border border-white/60 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
+    <div
+      className={`flex flex-col rounded-2xl border border-white/60 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5 ${
+        busy ? "opacity-60" : ""
+      }`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#00a2be]/10 text-[#00a2be]">
@@ -57,10 +62,14 @@ export function SupplierCard({
           <button
             onClick={() => onDeleteAction(s)}
             disabled={busy}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={`Delete ${s.name}`}
           >
-            <Trash2 className="h-4 w-4" />
+            {busy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>

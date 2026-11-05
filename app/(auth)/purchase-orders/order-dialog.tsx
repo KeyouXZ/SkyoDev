@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import type { ProductWithSupplier, SupplierSummary } from "@/types/inventory";
 import type { DraftItem } from "./types";
 import { OrderItemRow } from "./order-item-row";
@@ -103,19 +103,20 @@ export function OrderDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-60 flex items-end justify-center sm:items-center">
+    <div className="fixed inset-0 z-60 flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onCloseAction}
+        onClick={() => !submitting && onCloseAction()}
       />
-      <div className="relative m-0 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-xl sm:m-4 sm:max-w-lg sm:rounded-3xl">
+      <div className="relative m-4 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-3xl bg-white shadow-xl sm:max-w-lg">
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 className="text-xl font-bold tracking-tight text-gray-900">
             {t("purchaseOrders.newPurchaseOrder")}
           </h2>
           <button
             onClick={onCloseAction}
-            className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            disabled={submitting}
+            className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={t("common.close")}
           >
             <X className="h-5 w-5" />
@@ -224,8 +225,9 @@ export function OrderDialog({
           <button
             onClick={handleSubmit}
             disabled={submitting || items.length === 0}
-            className="cursor-pointer rounded-xl bg-[#00a2be] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#008ea6] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex cursor-pointer items-center gap-2 rounded-xl bg-[#00a2be] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#008ea6] disabled:cursor-not-allowed disabled:opacity-50"
           >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {submitting
               ? t("purchaseOrders.creating")
               : t("purchaseOrders.createOrder")}

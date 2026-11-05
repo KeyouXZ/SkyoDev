@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/auth/currentUser";
 import { prisma } from "@/lib/prisma";
-import { forecastDailyDemand } from "@/lib/forecast";
+import { forecastDailyDemand, suggestedOrderQuantity } from "@/lib/forecast";
 
 /**
  * GET /api/forecast
@@ -68,13 +68,9 @@ export async function GET(req: Request) {
         (sum, f) => sum + f.revenue,
         0,
       );
-      // Demand expected during the lead time.
-      const leadTimeDemand = forecast
-        .slice(0, product.leadTimeDays)
-        .reduce((sum, f) => sum + f.value, 0);
-      const suggestedOrder = Math.max(
-        0,
-        Math.ceil(leadTimeDemand + product.reorderPoint - product.stockLevel),
+      const { suggestedOrder, leadTimeDemand } = suggestedOrderQuantity(
+        forecast,
+        product,
       );
 
       forecasts.push({

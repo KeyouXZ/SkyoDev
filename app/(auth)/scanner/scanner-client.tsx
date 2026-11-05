@@ -7,6 +7,7 @@ import { CameraViewfinder } from "./camera-viewfinder";
 import { ManualSkuEntry } from "./manual-sku-entry";
 import { useScanner } from "./use-scanner";
 import { usePreferences } from "@/context/PreferencesContext";
+import { AlertDialog } from "@/components/AlertDialog";
 
 export default function ScannerPageClient() {
   const { t } = usePreferences();
@@ -18,7 +19,9 @@ export default function ScannerPageClient() {
     scanning,
     receiveQty,
     setReceiveQty,
-    busy,
+    busyAction,
+    alert,
+    setAlert,
     scannerRef,
     stopCamera,
     startCamera,
@@ -65,13 +68,20 @@ export default function ScannerPageClient() {
               result={result}
               receiveQty={receiveQty}
               onReceiveQtyChangeAction={setReceiveQty}
-              busy={busy}
+              busyAction={busyAction}
               onReceiveAction={handleReceive}
               onSellAction={handleSell}
             />
           )}
         </div>
       </div>
+
+      <AlertDialog
+        open={alert !== null}
+        title={alert?.title ?? ""}
+        message={alert?.message ?? ""}
+        onCloseAction={() => setAlert(null)}
+      />
     </PageShell>
   );
 }

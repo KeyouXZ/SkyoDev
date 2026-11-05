@@ -2,21 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import useSWR from "swr";
 import { PageShell } from "@/components/PageShell";
 import type { CurrentUser } from "@/auth/currentUser";
 import { useUser } from "@/context/UserContext";
 import { usePreferences } from "@/context/PreferencesContext";
-import type { ProductWithSupplier } from "@/types/inventory";
-import { fetcher, swrOptions } from "@/lib/fetcher";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useMounted } from "@/hooks/useMounted";
+import { useProducts } from "@/hooks/useProducts";
+import { useOrders } from "@/hooks/useOrders";
+import { useSales } from "@/hooks/useSales";
 import { SalesChart } from "./sales-chart";
 import { QuickActions } from "./quick-actions";
 import { StatCards } from "./stat-cards";
 import { useDashboardStats } from "./use-dashboard-stats";
 import { useSalesChartData } from "./use-sales-chart-data";
-import type { PurchaseOrder, SaleRecord } from "./types";
 
 interface Props {
   user?: CurrentUser;
@@ -30,19 +29,9 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
   const router = useRouter();
   const [chartDays, setChartDays] = useState(7);
 
-  const { data: products = [], isLoading: productsLoading } = useSWR<
-    ProductWithSupplier[]
-  >("/api/products", fetcher, swrOptions);
-  const { data: orders = [] } = useSWR<PurchaseOrder[]>(
-    "/api/purchase-orders",
-    fetcher,
-    swrOptions,
-  );
-  const { data: sales = [] } = useSWR<SaleRecord[]>(
-    "/api/sales?limit=500",
-    fetcher,
-    swrOptions,
-  );
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: orders = [] } = useOrders();
+  const { data: sales = [] } = useSales();
 
   const loading = productsLoading;
   const stats = useDashboardStats(products, orders, sales);

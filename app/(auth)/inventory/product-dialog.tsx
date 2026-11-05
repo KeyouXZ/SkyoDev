@@ -121,7 +121,7 @@ export function ProductDialog({
   return (
     <div
       key={product?.id ?? "new"}
-      className="fixed inset-0 z-60 flex items-end justify-center sm:items-center"
+      className="fixed inset-0 z-60 flex items-center justify-center"
     >
       {/* Backdrop */}
       <div
@@ -130,7 +130,7 @@ export function ProductDialog({
       />
 
       {/* Dialog */}
-      <div className="relative m-0 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-xl duration-150 sm:m-4 sm:max-w-150 sm:rounded-3xl">
+      <div className="relative m-4 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-3xl bg-white shadow-xl duration-150 sm:max-w-150">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 className="text-xl font-bold tracking-tight text-gray-900">
@@ -179,7 +179,13 @@ export function ProductDialog({
               className="flex cursor-pointer items-center gap-2 rounded-xl bg-[#00a2be] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#008ea6] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isEdit ? t("common.save") : t("inventory.createProduct")}
+              {submitting
+                ? isEdit
+                  ? t("inventory.saving")
+                  : t("inventory.creating")
+                : isEdit
+                  ? t("common.save")
+                  : t("inventory.createProduct")}
             </button>
           </div>
         </form>

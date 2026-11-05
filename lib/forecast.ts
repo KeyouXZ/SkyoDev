@@ -115,3 +115,21 @@ export function forecastDailyDemand(
     };
   });
 }
+
+/**
+ * Suggested reorder quantity for a product given its forecast.
+ * Shared by /api/forecast and /api/notifications so both show the same number.
+ */
+export function suggestedOrderQuantity(
+  forecast: ForecastPoint[],
+  product: { stockLevel: number; reorderPoint: number; leadTimeDays: number },
+): { suggestedOrder: number; leadTimeDemand: number } {
+  const leadTimeDemand = forecast
+    .slice(0, product.leadTimeDays)
+    .reduce((sum, f) => sum + f.value, 0);
+  const suggestedOrder = Math.max(
+    0,
+    Math.ceil(leadTimeDemand + product.reorderPoint - product.stockLevel),
+  );
+  return { suggestedOrder, leadTimeDemand };
+}

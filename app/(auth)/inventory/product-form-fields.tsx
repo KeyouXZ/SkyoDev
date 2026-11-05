@@ -2,7 +2,7 @@
 
 import type { ProductFormData, SupplierSummary } from "@/types/inventory";
 import { usePreferences } from "@/context/PreferencesContext";
-import { USD_TO_IDR_RATE } from "@/lib/format";
+import { getExchangeRate } from "@/lib/exchange-rate";
 import { inputCls, labelCls, errorCls } from "./product-form";
 
 interface ProductFormFieldsProps {
@@ -27,12 +27,12 @@ export function ProductFormFields({
     Number.isNaN(dollars)
       ? ""
       : isIDR
-        ? Math.round(dollars * USD_TO_IDR_RATE)
+        ? Math.round(dollars * getExchangeRate())
         : dollars;
   const fromDisplay = (raw: string) => {
     const n = parseFloat(raw);
     if (Number.isNaN(n)) return NaN;
-    return isIDR ? n / USD_TO_IDR_RATE : n;
+    return isIDR ? n / getExchangeRate() : n;
   };
   return (
     <>

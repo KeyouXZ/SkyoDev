@@ -1,34 +1,31 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import useSWR from "swr";
 import { toast } from "sonner";
-import { fetcher, swrOptions } from "@/lib/fetcher";
 import { usePreferences } from "@/context/PreferencesContext";
-import type { ProductWithSupplier, SupplierSummary } from "@/types/inventory";
+import { useProducts } from "@/hooks/useProducts";
+import { useSuppliers } from "@/hooks/useSuppliers";
+import { useOrders } from "@/hooks/useOrders";
 import type { OrderStatus, PurchaseOrder, StatusFilter } from "./types";
+
+export type BusyAction = { id: number; action: "send" | "received" | "delete" };
 
 export function usePurchaseOrders() {
   const { t } = usePreferences();
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [busyAction, setBusyAction] = useState<BusyAction | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PurchaseOrder | null>(
+    null,
+  );
+  const [pendingStatus, setPendingStatus] = useState<{
+    order: PurchaseOrder;
+    status: OrderStatus;
+  } | null>(null);
 
-  const { data: orders = [], mutate: mutateOrders } = useSWR<PurchaseOrder[]>(
-    "/api/purchase-orders",
-    fetcher,
-    swrOptions,
-  );
-  const { data: products = [] } = useSWR<ProductWithSupplier[]>(
-    "/api/products",
-    fetcher,
-    swrOptions,
-  );
-  const { data: suppliers = [] } = useSWR<SupplierSummary[]>(
-    "/api/suppliers",
-    fetcher,
-    swrOptions,
-  );
+  const { data: orders = [], mutate: mutateOrders } = useOrders();
+  const { data: products = [] } = useProducts();
+  const { data: suppliers = [] } = useSuppliers();
 
   const filtered = useMemo(
     () =>
@@ -48,7 +45,10 @@ export function usePurchaseOrders() {
   }, [orders]);
 
   const updateStatus = async (order: PurchaseOrder, status: OrderStatus) => {
-    setBusyId(order.id);
+    setBusyAction({
+      id: order.id,
+      action: status === "sent" ? "send" : "received",
+    });
     try {
       const res = await fetch(`/api/purchase-orders/${order.id}`, {
         method: "PATCH",
@@ -79,14 +79,13 @@ export function usePurchaseOrders() {
             : t("inventory.somethingWentWrong"),
       });
     } finally {
-      setBusyId(null);
+      setBusyAction(null);
+      setPendingStatus(null);
     }
   };
 
   const handleDelete = async (order: PurchaseOrder) => {
-    if (!window.confirm(t("purchaseOrders.confirmDelete", { id: order.id })))
-      return;
-    setBusyId(order.id);
+    setBusyAction({ id: order.id, action: "delete" });
     try {
       const res = await fetch(`/api/purchase-orders/${order.id}`, {
         method: "DELETE",
@@ -104,7 +103,8 @@ export function usePurchaseOrders() {
             : t("inventory.somethingWentWrong"),
       });
     } finally {
-      setBusyId(null);
+      setBusyAction(null);
+      setPendingDelete(null);
     }
   };
 
@@ -113,7 +113,11 @@ export function usePurchaseOrders() {
     setFilter,
     dialogOpen,
     setDialogOpen,
-    busyId,
+    busyAction,
+    pendingDelete,
+    setPendingDelete,
+    pendingStatus,
+    setPendingStatus,
     orders,
     products,
     suppliers,

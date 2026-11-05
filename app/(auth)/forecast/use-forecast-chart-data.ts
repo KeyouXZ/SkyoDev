@@ -22,7 +22,9 @@ export function useForecastChartData(
     const unitsByDay = new Map<string, number>();
     const revenueByDay = new Map<string, number>();
     for (const s of sales) {
-      const d = new Date(s.saleDate).toISOString().slice(0, 10);
+      const saleDate = new Date(s.saleDate);
+      saleDate.setHours(0, 0, 0, 0);
+      const d = saleDate.toISOString().slice(0, 10);
       unitsByDay.set(d, (unitsByDay.get(d) ?? 0) + s.quantity);
       revenueByDay.set(
         d,

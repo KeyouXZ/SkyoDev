@@ -1,20 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import useSWR from "swr";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import { PageShell } from "@/components/PageShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ProductDialog } from "./product-dialog";
 import { InventoryToolbar } from "./inventory-toolbar";
 import { InventoryTable } from "./inventory-table";
 import { InventoryMobileCards } from "./inventory-mobile-cards";
 import { exportToCSV } from "@/lib/export-csv";
-import { fetcher, swrOptions } from "@/lib/fetcher";
 import { usePreferences } from "@/context/PreferencesContext";
 import { formatCurrency } from "@/lib/format";
+import { useProducts } from "@/hooks/useProducts";
+import { useSuppliers } from "@/hooks/useSuppliers";
 import type { CurrentUser } from "@/auth/currentUser";
-import type { ProductWithSupplier, SupplierSummary } from "@/types/inventory";
+import type { ProductWithSupplier } from "@/types/inventory";
 
 interface Props {
   user?: CurrentUser;
@@ -31,12 +32,8 @@ export default function InventoryPageClient({ user }: Props) {
     mutate: mutateProducts,
     isLoading: loading,
     error: productsError,
-  } = useSWR<ProductWithSupplier[]>("/api/products", fetcher, swrOptions);
-  const { data: suppliers = [] } = useSWR<SupplierSummary[]>(
-    "/api/suppliers",
-    fetcher,
-    swrOptions,
-  );
+  } = useProducts();
+  const { data: suppliers = [] } = useSuppliers();
   const loadError = productsError
     ? productsError instanceof Error
       ? productsError.message
@@ -52,6 +49,9 @@ export default function InventoryPageClient({ user }: Props) {
     open: false,
     product: null,
   });
+  const [pendingDelete, setPendingDelete] =
+    useState<ProductWithSupplier | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // Filtering
   const filtered = products.filter((p) => {
@@ -84,8 +84,7 @@ export default function InventoryPageClient({ user }: Props) {
   };
 
   const handleDelete = async (product: ProductWithSupplier) => {
-    if (!window.confirm(t("inventory.confirmDelete"))) return;
-
+    setDeletingId(product.id);
     try {
       const res = await fetch(`/api/products/${product.id}`, {
         method: "DELETE",
@@ -105,6 +104,9 @@ export default function InventoryPageClient({ user }: Props) {
       const message =
         err instanceof Error ? err.message : t("inventory.somethingWentWrong");
       toast.error(t("inventory.couldNotDelete"), { description: message });
+    } finally {
+      setDeletingId(null);
+      setPendingDelete(null);
     }
   };
 
@@ -131,15 +133,26 @@ export default function InventoryPageClient({ user }: Props) {
         products={products}
         filtered={filtered}
         loading={loading}
+        deletingId={deletingId}
         onEditAction={(prod) => setDialog({ open: true, product: prod })}
-        onDeleteAction={handleDelete}
+        onDeleteAction={setPendingDelete}
       />
 
       <InventoryMobileCards
         filtered={filtered}
         loading={loading}
+        deletingId={deletingId}
         onEditAction={(prod) => setDialog({ open: true, product: prod })}
-        onDeleteAction={handleDelete}
+        onDeleteAction={setPendingDelete}
+      />
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={t("common.delete")}
+        message={`${t("inventory.confirmDelete")} (${pendingDelete?.name ?? ""})`}
+        busy={deletingId !== null}
+        onConfirmAction={() => pendingDelete && handleDelete(pendingDelete)}
+        onCancelAction={() => setPendingDelete(null)}
       />
 
       {/* Add / Edit Product Dialog  */}

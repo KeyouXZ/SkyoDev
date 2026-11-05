@@ -14,7 +14,10 @@ export function useScanner() {
   const [looking, setLooking] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [receiveQty, setReceiveQty] = useState(1);
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<"receive" | "sell" | null>(null);
+  const [alert, setAlert] = useState<{ title: string; message: string } | null>(
+    null,
+  );
 
   const scannerRef = useRef<HTMLDivElement | null>(null);
   const qrCodeRef = useRef<Html5Qrcode | null>(null);
@@ -60,8 +63,9 @@ export function useScanner() {
         setResult(data as ScanResult);
         setReceiveQty(1);
       } catch (err) {
-        toast.error(t("scanner.productNotFound"), {
-          description:
+        setAlert({
+          title: t("scanner.productNotFound"),
+          message:
             err instanceof Error
               ? err.message
               : t("scanner.somethingWentWrong"),
@@ -102,9 +106,9 @@ export function useScanner() {
       );
       setScanning(true);
     } catch (err) {
-      toast.error(t("scanner.cameraUnavailable"), {
-        description:
-          err instanceof Error ? err.message : t("scanner.cameraHint"),
+      setAlert({
+        title: t("scanner.cameraUnavailable"),
+        message: err instanceof Error ? err.message : t("scanner.cameraHint"),
       });
       stopCamera();
     }
@@ -112,7 +116,7 @@ export function useScanner() {
 
   const handleReceive = async () => {
     if (!result || receiveQty < 1) return;
-    setBusy(true);
+    setBusyAction("receive");
     try {
       const res = await fetch(`/api/products/${result.product.id}`, {
         method: "PUT",
@@ -140,19 +144,20 @@ export function useScanner() {
           err instanceof Error ? err.message : t("scanner.somethingWentWrong"),
       });
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
   const handleSell = async () => {
     if (!result) return;
     if (result.product.stockLevel < 1) {
-      toast.error(t("scanner.outOfStock"), {
-        description: t("scanner.noStockToSell", { name: result.product.name }),
+      setAlert({
+        title: t("scanner.outOfStock"),
+        message: t("scanner.noStockToSell", { name: result.product.name }),
       });
       return;
     }
-    setBusy(true);
+    setBusyAction("sell");
     try {
       const res = await fetch("/api/sales", {
         method: "POST",
@@ -183,7 +188,7 @@ export function useScanner() {
           err instanceof Error ? err.message : t("scanner.somethingWentWrong"),
       });
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
@@ -195,7 +200,9 @@ export function useScanner() {
     scanning,
     receiveQty,
     setReceiveQty,
-    busy,
+    busyAction,
+    alert,
+    setAlert,
     scannerRef,
     stopCamera,
     startCamera,

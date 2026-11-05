@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import { usePreferences } from "@/context/PreferencesContext";
-import { formatDollars } from "@/lib/format";
+import { formatDollars, convertCurrency } from "@/lib/format";
 
 export interface DayRevenue {
   day: string;
@@ -20,8 +20,12 @@ export interface DayRevenue {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomPointLabel = (props: any) => {
-  const { x, y, value } = props;
+  const { x, y, value, currency } = props;
   if (value === undefined || value === null) return null;
+  const formatted = new Intl.NumberFormat(
+    currency === "IDR" ? "id-ID" : "en-US",
+    { notation: "compact", maximumFractionDigits: 1 },
+  ).format(convertCurrency(Number(value), currency));
   return (
     <text
       x={x}
@@ -32,7 +36,7 @@ const CustomPointLabel = (props: any) => {
       textAnchor="middle"
       className="select-none"
     >
-      {value}
+      {formatted}
     </text>
   );
 };
@@ -105,6 +109,12 @@ export function SalesChart({
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: "#64748b", fontSize: 11 }}
+                  tickFormatter={(v: number) =>
+                    new Intl.NumberFormat(
+                      currency === "IDR" ? "id-ID" : "en-US",
+                      { notation: "compact", maximumFractionDigits: 1 },
+                    ).format(convertCurrency(v, currency))
+                  }
                 />
                 <Tooltip
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,7 +147,7 @@ export function SalesChart({
                     stroke: "#ffffff",
                     strokeWidth: 2,
                   }}
-                  label={<CustomPointLabel />}
+                  label={<CustomPointLabel currency={currency} />}
                 />
               </LineChart>
             </ResponsiveContainer>

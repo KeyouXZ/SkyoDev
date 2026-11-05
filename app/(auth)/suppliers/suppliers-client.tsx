@@ -7,6 +7,7 @@ import { SupplierToolbar } from "./supplier-toolbar";
 import { SupplierCard } from "./supplier-card";
 import { useSuppliers } from "./use-suppliers";
 import { usePreferences } from "@/context/PreferencesContext";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function SuppliersPageClient() {
   const { t } = usePreferences();
@@ -17,6 +18,8 @@ export default function SuppliersPageClient() {
     setDialogOpen,
     editing,
     busyId,
+    pendingDelete,
+    setPendingDelete,
     filtered,
     openCreate,
     openEdit,
@@ -53,11 +56,22 @@ export default function SuppliersPageClient() {
               supplier={s}
               busy={busyId === s.id}
               onEditAction={openEdit}
-              onDeleteAction={handleDelete}
+              onDeleteAction={setPendingDelete}
             />
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={t("common.delete")}
+        message={t("suppliers.confirmDelete", {
+          name: pendingDelete?.name ?? "",
+        })}
+        busy={busyId !== null}
+        onConfirmAction={() => pendingDelete && handleDelete(pendingDelete)}
+        onCancelAction={() => setPendingDelete(null)}
+      />
 
       {dialogOpen && (
         <SupplierDialog

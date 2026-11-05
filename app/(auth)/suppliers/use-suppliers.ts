@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import useSWR from "swr";
 import { toast } from "sonner";
-import { fetcher, swrOptions } from "@/lib/fetcher";
 import { usePreferences } from "@/context/PreferencesContext";
+import { useSuppliers as useSuppliersData } from "@/hooks/useSuppliers";
 import type { Supplier } from "./types";
 
 export function useSuppliers() {
@@ -13,12 +12,9 @@ export function useSuppliers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Supplier | null>(null);
 
-  const { data: suppliers = [], mutate } = useSWR<Supplier[]>(
-    "/api/suppliers",
-    fetcher,
-    swrOptions,
-  );
+  const { data: suppliers = [], mutate } = useSuppliersData();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -42,7 +38,6 @@ export function useSuppliers() {
   };
 
   const handleDelete = async (s: Supplier) => {
-    if (!window.confirm(t("suppliers.confirmDelete", { name: s.name }))) return;
     setBusyId(s.id);
     try {
       const res = await fetch(`/api/suppliers/${s.id}`, {
@@ -64,6 +59,7 @@ export function useSuppliers() {
       });
     } finally {
       setBusyId(null);
+      setPendingDelete(null);
     }
   };
 
@@ -74,6 +70,8 @@ export function useSuppliers() {
     setDialogOpen,
     editing,
     busyId,
+    pendingDelete,
+    setPendingDelete,
     filtered,
     openCreate,
     openEdit,

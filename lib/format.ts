@@ -1,8 +1,10 @@
 /**
  * Currency and number formatting.
  * DB stores prices in USD cents (e.g. 1299 = $12.99).
- * Display converts to the selected currency via a fixed rate.
+ * Display converts to the selected currency via the live USD→IDR rate
+ * (see lib/exchange-rate.ts, falls back to 16,000).
  */
+import { getExchangeRate } from "./exchange-rate";
 
 export type Currency = "USD" | "IDR";
 export type Locale = "en" | "id";
@@ -14,7 +16,7 @@ export function centsToDollars(cents: number): number {
 }
 
 export function convertCurrency(dollars: number, currency: Currency): number {
-  return currency === "IDR" ? dollars * USD_TO_IDR_RATE : dollars;
+  return currency === "IDR" ? dollars * getExchangeRate() : dollars;
 }
 
 /**

@@ -18,15 +18,15 @@ import { usePreferences } from "@/context/PreferencesContext";
 const navItems = [
   { nameKey: "nav.dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { nameKey: "nav.inventory", icon: Box, href: "/inventory" },
-  { nameKey: "nav.suppliers", icon: Building2, href: "/suppliers" },
-  { nameKey: "nav.sell", icon: ShoppingBag, href: "/sell" },
-  { nameKey: "nav.scanner", icon: ScanLine, href: "/scanner" },
-  { nameKey: "nav.forecast", icon: TrendingUp, href: "/forecast" },
   {
     nameKey: "nav.purchaseOrders",
     icon: ShoppingCart,
     href: "/purchase-orders",
   },
+  { nameKey: "nav.suppliers", icon: Building2, href: "/suppliers" },
+  { nameKey: "nav.sell", icon: ShoppingBag, href: "/sell" },
+  { nameKey: "nav.scanner", icon: ScanLine, href: "/scanner" },
+  { nameKey: "nav.forecast", icon: TrendingUp, href: "/forecast" },
 ];
 
 interface NavigationProps {

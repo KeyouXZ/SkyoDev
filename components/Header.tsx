@@ -99,7 +99,7 @@ export function Header({
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#00a2be]/15 text-[#00a2be]">
               <UserIcon className="h-3.5 w-3.5" />
             </div>
-            <span className="max-w-25 truncate font-semibold text-gray-700">
+            <span className="hidden max-w-25 truncate font-semibold text-gray-700 sm:inline">
               {displayName}
             </span>
             <ChevronDown

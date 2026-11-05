@@ -49,7 +49,7 @@ export function NotificationPanel({
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2 font-semibold text-gray-900">
           <Bell className="h-4 w-4 text-gray-500" />
-          <span>{t("notifications.title")}</span>
+          <span className="text-sm">{t("notifications.title")}</span>
         </div>
         <button
           onClick={onCloseAction}

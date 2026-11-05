@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import useSWR from "swr";
 import { toast } from "sonner";
-import { fetcher, swrOptions } from "@/lib/fetcher";
 import { usePreferences } from "@/context/PreferencesContext";
 import { formatDollars } from "@/lib/format";
+import { useProducts } from "@/hooks/useProducts";
+import { useSales } from "@/hooks/useSales";
 import type { ProductWithSupplier } from "@/types/inventory";
-import type { SaleRecord, Tab } from "./types";
+import type { Tab } from "./types";
 
 export function useSell() {
   const { t, currency } = usePreferences();
@@ -17,14 +17,9 @@ export function useSell() {
   const [quantity, setQuantity] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
-  const { data: products = [], isLoading: productsLoading } = useSWR<
-    ProductWithSupplier[]
-  >("/api/products", fetcher, swrOptions);
-  const { data: sales = [], mutate: mutateSales } = useSWR<SaleRecord[]>(
-    "/api/sales?limit=30",
-    fetcher,
-    swrOptions,
-  );
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: allSales = [], mutate: mutateSales } = useSales();
+  const sales = useMemo(() => allSales.slice(0, 30), [allSales]);
 
   const selected = useMemo(
     () => products.find((p) => p.id === selectedId) ?? null,

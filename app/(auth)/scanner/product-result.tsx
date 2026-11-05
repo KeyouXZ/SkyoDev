@@ -1,6 +1,13 @@
 "use client";
 
-import { Package, Plus, ShoppingBag, AlertTriangle, Check } from "lucide-react";
+import {
+  Loader2,
+  Package,
+  Plus,
+  ShoppingBag,
+  AlertTriangle,
+  Check,
+} from "lucide-react";
 import { usePreferences } from "@/context/PreferencesContext";
 import { formatCurrency } from "@/lib/format";
 import type { ScanResult } from "./types";
@@ -11,14 +18,14 @@ export function ProductResult({
   result,
   receiveQty,
   onReceiveQtyChangeAction,
-  busy,
+  busyAction,
   onReceiveAction,
   onSellAction,
 }: {
   result: ScanResult;
   receiveQty: number;
   onReceiveQtyChangeAction: (qty: number) => void;
-  busy: boolean;
+  busyAction: "receive" | "sell" | null;
   onReceiveAction: () => void;
   onSellAction: () => void;
 }) {
@@ -104,19 +111,27 @@ export function ProductResult({
           </div>
           <button
             onClick={onReceiveAction}
-            disabled={busy}
+            disabled={busyAction === "receive"}
             className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Plus className="h-4 w-4" />
+            {busyAction === "receive" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
             {t("scanner.receive")}
           </button>
         </div>
         <button
           onClick={onSellAction}
-          disabled={busy || p.stockLevel < 1}
+          disabled={busyAction === "sell" || p.stockLevel < 1}
           className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#00a2be] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#008ea6] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <ShoppingBag className="h-4 w-4" />
+          {busyAction === "sell" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ShoppingBag className="h-4 w-4" />
+          )}
           {t("scanner.sell1")} — {formatCurrency(p.price, currency)}
         </button>
         <p className="flex items-center justify-center gap-1 text-center text-xs text-gray-400">

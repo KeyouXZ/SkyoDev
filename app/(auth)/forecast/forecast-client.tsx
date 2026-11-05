@@ -5,12 +5,13 @@ import useSWR from "swr";
 import { PageShell } from "@/components/PageShell";
 import { fetcher, swrOptions } from "@/lib/fetcher";
 import { useMounted } from "@/hooks/useMounted";
+import { useSales } from "@/hooks/useSales";
 import { usePreferences } from "@/context/PreferencesContext";
 import { ForecastControls } from "./forecast-controls";
 import { ForecastChart } from "./forecast-chart";
 import { ReorderList } from "./reorder-list";
 import { useForecastChartData } from "./use-forecast-chart-data";
-import type { ForecastResponse, Metric, SaleRecord } from "./types";
+import type { ForecastResponse, Metric } from "./types";
 
 export default function ForecastPageClient() {
   const { t } = usePreferences();
@@ -24,11 +25,7 @@ export default function ForecastPageClient() {
       fetcher,
       swrOptions,
     );
-  const { data: sales = [] } = useSWR<SaleRecord[]>(
-    "/api/sales?limit=500",
-    fetcher,
-    swrOptions,
-  );
+  const { data: sales = [] } = useSales();
 
   const chartData = useForecastChartData(sales, forecastData, horizon, metric);
 

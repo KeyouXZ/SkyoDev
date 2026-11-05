@@ -1,6 +1,13 @@
 "use client";
 
-import { Package, Minus, Plus, Check, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  Package,
+  Minus,
+  Plus,
+  Check,
+  AlertTriangle,
+} from "lucide-react";
 import { usePreferences } from "@/context/PreferencesContext";
 import { formatCurrency, formatDollars } from "@/lib/format";
 import type { ProductWithSupplier } from "@/types/inventory";
@@ -127,7 +134,10 @@ export function SelectedProduct({
         className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#00a2be] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#008ea6] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? (
-          t("sell.recording")
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {t("sell.recording")}
+          </>
         ) : (
           <>
             <Check className="h-4 w-4" />

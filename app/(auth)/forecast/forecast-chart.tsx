@@ -13,7 +13,7 @@ import {
 import type { ChartPoint } from "./use-forecast-chart-data";
 import type { Metric } from "./types";
 import { usePreferences } from "@/context/PreferencesContext";
-import { formatDollars, formatNumber } from "@/lib/format";
+import { formatDollars, formatNumber, convertCurrency } from "@/lib/format";
 
 interface ForecastChartProps {
   chartData: ChartPoint[];
@@ -73,8 +73,28 @@ export function ForecastChart({
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: "#64748b", fontSize: 11 }}
+                  tickFormatter={(v: number) => {
+                    if (metric === "revenue") {
+                      const converted = convertCurrency(v, currency);
+                      return new Intl.NumberFormat(
+                        currency === "IDR" ? "id-ID" : "en-US",
+                        {
+                          notation: "compact",
+                          maximumFractionDigits: 1,
+                        },
+                      ).format(converted);
+                    }
+                    return formatNumber(Math.round(v), locale);
+                  }}
                 />
                 <Tooltip
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(val: any, name: any) => [
+                    metric === "revenue"
+                      ? formatDollars(Number(val ?? 0), currency)
+                      : `${formatNumber(Number(val ?? 0), locale)} ${t("forecast.units")}`,
+                    name,
+                  ]}
                   contentStyle={{
                     backgroundColor: "#ffffff",
                     borderRadius: "12px",

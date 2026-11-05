@@ -4,7 +4,6 @@ import {
   ShoppingBag,
   ScanLine,
   TrendingUp,
-  LineChart as LineChartIcon,
   type LucideIcon,
 } from "lucide-react";
 import { usePreferences } from "@/context/PreferencesContext";
@@ -19,20 +18,6 @@ interface QuickAction {
 
 const ACTIONS: QuickAction[] = [
   {
-    titleKey: "dashboard.viewAiForecast",
-    subtitleKey: "dashboard.seeReorderSuggestions",
-    icon: TrendingUp,
-    iconBg: "bg-[#cfe9f8] text-[#0284c7]",
-    href: "/forecast",
-  },
-  {
-    titleKey: "dashboard.viewSalesForecast",
-    subtitleKey: "dashboard.projectNext30Days",
-    icon: LineChartIcon,
-    iconBg: "bg-[#c7f0f6] text-[#0891b2]",
-    href: "/forecast",
-  },
-  {
     titleKey: "dashboard.sellProducts",
     subtitleKey: "dashboard.recordASell",
     icon: ShoppingBag,
@@ -45,6 +30,13 @@ const ACTIONS: QuickAction[] = [
     icon: ScanLine,
     iconBg: "bg-[#ffedd5] text-[#f97316]",
     href: "/scanner",
+  },
+  {
+    titleKey: "dashboard.viewSalesForecast",
+    subtitleKey: "dashboard.projectNext30Days",
+    icon: TrendingUp,
+    iconBg: "bg-[#cfe9f8] text-[#0284c7]",
+    href: "/forecast",
   },
 ];
 

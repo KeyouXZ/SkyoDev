@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { emptySupplierForm, type Supplier, type SupplierForm } from "./types";
 import { usePreferences } from "@/context/PreferencesContext";
 
@@ -93,19 +93,20 @@ export function SupplierDialog({
   const labelCls = "mb-1.5 block text-sm font-medium text-gray-700";
 
   return (
-    <div className="fixed inset-0 z-60 flex items-end justify-center sm:items-center">
+    <div className="fixed inset-0 z-60 flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onCloseAction}
+        onClick={() => !submitting && onCloseAction()}
       />
-      <div className="relative m-0 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-xl sm:m-4 sm:max-w-md sm:rounded-3xl">
+      <div className="relative m-4 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-3xl bg-white shadow-xl sm:max-w-md">
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 className="text-xl font-bold tracking-tight text-gray-900">
             {isEdit ? t("suppliers.editSupplier") : t("suppliers.newSupplier")}
           </h2>
           <button
             onClick={onCloseAction}
-            className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            disabled={submitting}
+            className="cursor-pointer rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={t("common.close")}
           >
             <X className="h-5 w-5" />
@@ -168,15 +169,17 @@ export function SupplierDialog({
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-4">
           <button
             onClick={onCloseAction}
-            className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50"
+            disabled={submitting}
+            className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-xs transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t("common.cancel")}
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="cursor-pointer rounded-xl bg-[#00a2be] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#008ea6] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex cursor-pointer items-center gap-2 rounded-xl bg-[#00a2be] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#008ea6] disabled:cursor-not-allowed disabled:opacity-50"
           >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {submitting
               ? t("suppliers.saving")
               : isEdit

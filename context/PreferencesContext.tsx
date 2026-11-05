@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { Currency, Locale } from "@/lib/format";
 import { dictionaries, getNested, interpolate } from "@/lib/i18n";
+import { fetchExchangeRate } from "@/lib/exchange-rate";
 
 interface PreferencesValue {
   locale: Locale;
@@ -42,6 +43,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocaleState(readStored<Locale>(LOCALE_KEY, "en"));
     setCurrencyState(readStored<Currency>(CURRENCY_KEY, "USD"));
+    // Warm the realtime USD→IDR rate (cached 1h, falls back to 16,000).
+    void fetchExchangeRate();
   }, []);
 
   const setLocale = useCallback((next: Locale) => {

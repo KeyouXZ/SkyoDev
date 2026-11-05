@@ -7,6 +7,7 @@ import { OrderToolbar } from "./order-toolbar";
 import { OrderCard } from "./order-card";
 import { usePurchaseOrders } from "./use-purchase-orders";
 import { usePreferences } from "@/context/PreferencesContext";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function PurchaseOrdersPageClient() {
   const { t } = usePreferences();
@@ -15,7 +16,11 @@ export default function PurchaseOrdersPageClient() {
     setFilter,
     dialogOpen,
     setDialogOpen,
-    busyId,
+    busyAction,
+    pendingDelete,
+    setPendingDelete,
+    pendingStatus,
+    setPendingStatus,
     products,
     suppliers,
     filtered,
@@ -55,13 +60,55 @@ export default function PurchaseOrdersPageClient() {
             <OrderCard
               key={o.id}
               order={o}
-              busy={busyId === o.id}
-              onUpdateStatusAction={updateStatus}
-              onDeleteAction={handleDelete}
+              busyAction={busyAction?.id === o.id ? busyAction.action : null}
+              onUpdateStatusAction={(order, status) =>
+                setPendingStatus({ order, status })
+              }
+              onDeleteAction={setPendingDelete}
             />
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={t("common.delete")}
+        message={t("purchaseOrders.confirmDelete", {
+          id: pendingDelete?.id ?? "",
+        })}
+        busy={busyAction?.action === "delete"}
+        onConfirmAction={() => pendingDelete && handleDelete(pendingDelete)}
+        onCancelAction={() => setPendingDelete(null)}
+      />
+
+      <ConfirmDialog
+        open={pendingStatus !== null}
+        title={t("purchaseOrders.status")}
+        message={
+          pendingStatus?.status === "sent"
+            ? t("purchaseOrders.poSent", { id: pendingStatus?.order.id ?? "" })
+            : t("purchaseOrders.poReceived", {
+                id: pendingStatus?.order.id ?? "",
+              })
+        }
+        confirmLabel={
+          pendingStatus?.status === "sent"
+            ? t("purchaseOrders.send")
+            : t("purchaseOrders.markReceived")
+        }
+        busyLabel={
+          pendingStatus?.status === "sent"
+            ? t("purchaseOrders.sending")
+            : t("purchaseOrders.receiving")
+        }
+        danger={false}
+        busy={busyAction !== null}
+        onConfirmAction={() =>
+          pendingStatus &&
+          updateStatus(pendingStatus.order, pendingStatus.status)
+        }
+        onCancelAction={() => setPendingStatus(null)}
+      />
 
       {dialogOpen && (
         <OrderDialog

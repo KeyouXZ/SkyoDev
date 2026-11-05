@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/auth/currentUser";
 import { prisma } from "@/lib/prisma";
 import { sendPushNotifications } from "@/lib/notification";
+import { forecastDailyDemand, suggestedOrderQuantity } from "@/lib/forecast";
 import { z } from "zod";
 
 const SendNotificationSchema = z.object({
@@ -45,24 +46,50 @@ export async function GET() {
       LIMIT 10
     `;
 
-    // 2. Fetch pending reorder suggestions
-    const pendingSuggestions = await prisma.reorderSuggestion.findMany({
-      where: {
-        userId: user.id,
-        status: "pending",
+    // 2. Live reorder suggestions (same formula as /api/forecast so the
+    // notification count always matches the Forecast page).
+    const products = await prisma.product.findMany({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        stockLevel: true,
+        reorderPoint: true,
+        leadTimeDays: true,
       },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            sku: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 10,
+      orderBy: { name: "asc" },
     });
+
+    const pendingSuggestions: Array<{
+      id: number;
+      productId: number;
+      suggestedQuantity: number;
+      reason: string | null;
+      product: { id: number; name: string; sku: string };
+    }> = [];
+    for (const product of products) {
+      const sales = await prisma.sale.findMany({
+        where: { userId: user.id, productId: product.id },
+        select: { quantity: true, saleDate: true },
+        orderBy: { saleDate: "asc" },
+      });
+      const forecast = forecastDailyDemand(sales, { days: 60, horizon: 30 });
+      const { suggestedOrder } = suggestedOrderQuantity(forecast, product);
+      if (suggestedOrder > 0) {
+        pendingSuggestions.push({
+          id: product.id,
+          productId: product.id,
+          suggestedQuantity: suggestedOrder,
+          reason: null,
+          product: { id: product.id, name: product.name, sku: product.sku },
+        });
+      }
+    }
+    pendingSuggestions.sort(
+      (a, b) => b.suggestedQuantity - a.suggestedQuantity,
+    );
+    const topSuggestions = pendingSuggestions.slice(0, 10);
 
     // 3. Count active subscribers
     const subscriberCount = await prisma.subscriber.count({
@@ -77,8 +104,8 @@ export async function GET() {
       alerts: {
         lowStockCount: lowStockProducts.length,
         lowStockProducts,
-        pendingSuggestionsCount: pendingSuggestions.length,
-        pendingSuggestions,
+        pendingSuggestionsCount: topSuggestions.length,
+        pendingSuggestions: topSuggestions,
       },
       subscribers: {
         userSubscribers: subscriberCount,

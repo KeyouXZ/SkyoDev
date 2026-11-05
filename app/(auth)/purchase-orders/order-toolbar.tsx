@@ -27,7 +27,7 @@ export function OrderToolbar({
   const { t } = usePreferences();
   return (
     <div className="mb-5 mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-white/60 bg-white/60 p-1.5 shadow-xs backdrop-blur-md">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 rounded-2xl border border-white/60 bg-white/60 p-1.5 shadow-xs backdrop-blur-md">
         {FILTERS.map((f) => (
           <button
             key={f.key}

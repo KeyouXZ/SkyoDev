@@ -10,6 +10,7 @@ export function useSalesChartData(sales: SaleRecord[], chartDays: number) {
   const salesChartData = useMemo<DayRevenue[]>(() => {
     const days: { date: string; day: string; revenue: number }[] = [];
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     for (let i = chartDays - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(now.getDate() - i);
@@ -33,7 +34,9 @@ export function useSalesChartData(sales: SaleRecord[], chartDays: number) {
     }
 
     for (const sale of sales) {
-      const saleDay = new Date(sale.saleDate).toISOString().slice(0, 10);
+      const saleDate = new Date(sale.saleDate);
+      saleDate.setHours(0, 0, 0, 0);
+      const saleDay = saleDate.toISOString().slice(0, 10);
       const entry = days.find((d) => d.date === saleDay);
       if (entry) {
         entry.revenue += (sale.quantity * (sale.product?.price ?? 0)) / 100;

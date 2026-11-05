@@ -1,16 +1,18 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 import type { ProductWithSupplier } from "@/types/inventory";
 
 export function RowActions({
   product,
   testPrefix,
+  busy = false,
   onEditAction,
   onDeleteAction,
 }: {
   product: ProductWithSupplier;
   testPrefix: string;
+  busy?: boolean;
   onEditAction: (product: ProductWithSupplier) => void;
   onDeleteAction: (product: ProductWithSupplier) => void;
 }) {
@@ -26,11 +28,16 @@ export function RowActions({
       </button>
       <button
         onClick={() => onDeleteAction(product)}
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-50 hover:text-red-600"
+        disabled={busy}
+        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
         aria-label={`Delete ${product.name}`}
         data-testid={`${testPrefix}-delete-${product.id}`}
       >
-        <Trash2 className="h-4 w-4" />
+        {busy ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Trash2 className="h-4 w-4" />
+        )}
       </button>
     </div>
   );

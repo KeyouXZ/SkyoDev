@@ -18,5 +18,5 @@ export async function fetcher<T>(url: string): Promise<T> {
 /** Default SWR options shared across the app (mirrors SKT's setup). */
 export const swrOptions = {
   revalidateOnFocus: false,
-  dedupingInterval: 10000,
+  dedupingInterval: 30000,
 } as const;
