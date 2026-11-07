@@ -30,8 +30,26 @@ export function InventoryMobileCards({
           .map((_, i) => (
             <div
               key={i}
-              className="h-24 w-full animate-pulse rounded-xl bg-white/70"
-            />
+              className="animate-pulse rounded-2xl border border-white/60 bg-white p-4 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-slate-200" />
+                  <div>
+                    <div className="h-4 w-28 rounded-full bg-slate-200" />
+                    <div className="mt-2 h-3 w-16 rounded-full bg-slate-200" />
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <div className="h-8 w-8 rounded-full bg-slate-200" />
+                  <div className="h-8 w-8 rounded-full bg-slate-200" />
+                </div>
+              </div>
+              <div className="mt-3 flex gap-4">
+                <div className="h-3 w-16 rounded-full bg-slate-200" />
+                <div className="h-3 w-20 rounded-full bg-slate-200" />
+              </div>
+            </div>
           ))
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-white/60 bg-white p-8 text-center text-sm text-gray-400 shadow-sm">

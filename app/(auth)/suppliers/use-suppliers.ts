@@ -14,7 +14,7 @@ export function useSuppliers() {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Supplier | null>(null);
 
-  const { data: suppliers = [], mutate } = useSuppliersData();
+  const { data: suppliers = [], mutate, isLoading } = useSuppliersData();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -72,6 +72,7 @@ export function useSuppliers() {
     busyId,
     pendingDelete,
     setPendingDelete,
+    isLoading,
     filtered,
     openCreate,
     openEdit,

@@ -54,7 +54,7 @@ export default function NiragaDashboard({ user: propUser }: Props = {}) {
       />
 
       {/* Bottom Grid */}
-      <div className="grid flex-1 grid-cols-1 items-start gap-5 lg:grid-cols-12">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
         <SalesChart
           data={salesChartData}
           yMax={yMax}

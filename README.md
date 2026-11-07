@@ -1,165 +1,164 @@
-# NIRAGA: Stock & Inventory AI
+# NIRAGA — Stock & Inventory
 
-NIRAGA is an inventory management app for small businesses. It helps you keep track of products, record sales, scan barcodes to receive or sell stock, manage purchase orders, and get reorder suggestions before you run out. Everything runs from one clean dashboard that works on desktop and mobile.
+> Inventory management for small businesses: track products, record sales, scan barcodes, manage purchase orders, and get reorder suggestions before you run out.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![Prisma](https://img.shields.io/badge/Prisma-7-purple) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-green)
 
 ---
 
-## What you can do
+## Features
 
-**Dashboard.** See your key numbers at a glance: total products, low stock alerts, pending orders, and inventory value. The numbers count up when the page loads, and there's a 7-day sales chart so you can spot trends.
-
-**Inventory.** Add, edit, and delete products. Search by name or SKU, filter to low-stock items only, and export everything to CSV when you need a spreadsheet.
-
-**Sell.** Record a sale by searching for a product and entering a quantity. Stock updates automatically, and if the product is a bundle, its component stock gets deducted too.
-
-**Barcode scanner.** Point your camera at a barcode or QR code and the product pops up. From there you can receive new stock or record a sale in a couple of taps. You can also type the SKU by hand if scanning isn't an option.
-
-**Accounts.** Sign up and sign in with email and password. Passwords are hashed with bcrypt and sessions are handled with secure cookies.
-
-**Alerts and suggestions.** When stock drops to the reorder point, you get flagged in the dashboard and in the notification bell. The system also generates reorder suggestions with suggested quantities so you know what to order.
-
-**Push notifications.** Optional web push (VAPID) for low-stock and purchase-order events, plus in-app toasts for everyday feedback like "Product saved" or "Sale recorded".
-
----
-
-## Tech stack
-
-| Area | What we use |
-| --- | --- |
-| Framework | Next.js 16 (App Router) |
-| UI | React 19, Tailwind CSS v4, Lucide icons |
-| Language | TypeScript |
-| Database | PostgreSQL on Supabase, via Prisma 7 |
-| Data fetching | SWR for caching and background revalidation |
-| Toasts | Sonner |
-| Charts | Recharts |
-| Validation | Zod |
-| Auth | bcryptjs with session cookies |
-| Scanning | html5-qrcode (works in every modern browser) |
+| Area | What you get |
+|---|---|
+| **Dashboard** | Total products, low-stock alerts, pending orders, inventory value — with count-up numbers and a sales chart |
+| **Inventory** | CRUD products, search by name/SKU, low-stock filter, CSV export |
+| **Purchase Orders** | Draft → Sent → Received flow with line items and confirm dialogs |
+| **Suppliers** | Manage supplier contacts linked to products |
+| **Sell** | Search + record sales; stock deducts automatically |
+| **Barcode Scanner** | Camera scan (html5-qrcode) or manual SKU entry; receive stock or sell in seconds |
+| **Forecast** | 30-day demand forecast (linear regression + seasonality) with reorder recommendations |
+| **Notifications** | Low-stock + reorder alerts in the header bell, plus optional web push (VAPID) |
+| **Preferences** | EN/ID language + USD/IDR currency (live rates, cached hourly) |
+| **Account** | Edit name/phone from the header menu |
 
 ---
 
-## Getting started
+## Tech Stack
 
-### What you need
-- [Bun](https://bun.sh) 1.4 or newer (Node 20+ works too)
-- A PostgreSQL database. Supabase is a good fit.
+| Layer | Technologies |
+|---|---|
+| **Framework** | Next.js 16 (App Router), React 19 |
+| **Language** | TypeScript |
+| **Styling** | Tailwind CSS v4, Lucide icons |
+| **Database** | PostgreSQL on Supabase, via Prisma 7 |
+| **Data fetching** | SWR with shared hooks (`useProducts`, `useSuppliers`, `useOrders`, `useSales`) |
+| **Charts** | Recharts |
+| **Toasts** | Sonner |
+| **Validation** | Zod |
+| **Auth** | bcryptjs + session cookies |
+| **Scanning** | html5-qrcode |
+| **Push** | web-push (VAPID) |
+| **Runtime** | Bun |
 
-### Install and set up
+---
+
+## Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh) 1.4+ (Node 20+ works too)
+- PostgreSQL (Supabase recommended)
+
+### Setup
 
 ```bash
 bun install
 ```
 
-Create a `.env` file in the project root:
+Create `.env`:
 
 ```env
-# Database. Use the transaction pooler (port 6543) for the app.
+# Database — use the transaction pooler (port 6543)
 DATABASE_URL="postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true"
 
-# Web push keys. Generate them with: npx web-push generate-vapid-keys
+# App URL (used for allowedDevOrigins in next.config.ts)
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+# Web push keys — generate with: npx web-push generate-vapid-keys
 NEXT_PUBLIC_VAPID_PUBLIC_KEY="..."
 VAPID_PRIVATE_KEY="..."
 VAPID_EMAIL="you@example.com"
 ```
 
-A quick note on the database URL: use port `6543` (transaction mode). Port `5432` (session mode) caps you at around 15 connections, which runs out fast once the app is live.
-
-Then set up the database and run the app:
+> **Note:** Use port `6543` (transaction mode). Port `5432` (session mode) caps at ~15 connections and runs out fast in production.
 
 ```bash
 bunx prisma migrate dev   # apply migrations
-bunx prisma db seed       # optional demo data
+bun run seed              # demo account: demo@niraga.test / demo1234
 bun run dev               # http://localhost:3000
 ```
 
 ### Camera on localhost
 
-The barcode scanner needs camera access, which browsers only allow in a secure context. The good news is that `http://localhost` counts as secure, so the camera works out of the box in development with no certificates. If you need to test from a phone on your LAN, you'll want HTTPS with a trusted cert (for example, one generated by `mkcert`).
+Browsers require a secure context for camera access. `http://localhost` counts as secure, so the scanner works out of the box in dev. For LAN testing from a phone, use HTTPS (e.g. via `mkcert`).
 
-### Handy scripts
+### Scripts
 
-| Command | What it does |
-| --- | --- |
-| `bun run dev` | Start the dev server |
+| Command | Description |
+|---|---|
+| `bun run dev` | Start dev server |
 | `bun run build` | Production build |
-| `bun run start` | Start the production server |
+| `bun run start` | Start production server |
 | `bun run lint` | Run ESLint |
+| `bun run seed` | Seed demo account (7 days of data) |
 
 ---
 
-## Project layout
+## Project Layout
 
 ```
 app/
-  (auth)/            # pages that need a login
-    dashboard/       # stats and sales chart
-    inventory/       # product management
-    sell/            # record sales
-    scanner/         # barcode and QR scanning
-  api/               # REST endpoints
-    products/        # product CRUD
-    sales/           # record and list sales
-    purchase-orders/ # purchase order CRUD
-    suppliers/       # supplier CRUD
-    scanner/         # SKU lookup
-    suggestions/     # reorder suggestions
-    notifications/   # alerts and push subscribe
-  login/             # sign in and sign up
-  error.tsx          # runtime error page
-  global-error.tsx   # errors in the root layout
-  not-found.tsx      # 404 page
-components/          # shared UI (Header, Navigation, Toaster, ...)
-hooks/               # useCountUp, use-push-notif
-lib/                 # prisma client, SWR fetcher, notifications, CSV export
-context/             # current user context
-auth/                # session and current-user helpers
-prisma/              # schema and migrations
-types/               # shared TypeScript types
+├── (auth)/                  # Authenticated pages
+│   ├── dashboard/           # Stats, sales chart, quick actions
+│   ├── inventory/           # Product management
+│   ├── purchase-orders/     # Purchase order management
+│   ├── suppliers/           # Supplier management
+│   ├── sell/                # Record sales
+│   ├── scanner/             # Barcode / QR scanning
+│   └── forecast/            # Demand forecast + reorder recommendations
+├── api/                     # REST endpoints (see table below)
+├── login/                   # Sign in / sign up
+├── layout.tsx               # Root layout
+├── error.tsx / global-error.tsx / not-found.tsx
+components/                  # Header, Navigation, PageShell, dialogs, ...
+hooks/                       # useProducts, useSuppliers, useOrders, useSales, useCountUp, ...
+lib/                         # prisma, fetcher, format, i18n/, exchange-rate, forecast, ...
+context/                     # UserContext, PreferencesContext (locale/currency)
+auth/                        # Session + current-user helpers
+prisma/                      # schema, migrations, seed
+types/                       # Shared TypeScript types
+next.config.ts               # allowedDevOrigins from NEXT_PUBLIC_APP_URL
 ```
 
 ---
 
-## API at a glance
+## API
 
-Every endpoint needs a logged-in session and only ever returns your own data.
+All endpoints require a logged-in session and return only your own data.
 
-| Method | Endpoint | What it does |
-| --- | --- | --- |
-| `GET` | `/api/products` | List products. Supports `search`, `category`, `lowStock`, `supplierId`. |
-| `POST` | `/api/products` | Create a product. |
-| `PUT` | `/api/products/[id]` | Update a product, including stock level. |
-| `DELETE` | `/api/products/[id]` | Delete a product. |
-| `GET` | `/api/sales` | List sales. Supports `productId` and `limit`. |
-| `POST` | `/api/sales` | Record a sale. Deducts stock. |
-| `GET` / `POST` | `/api/purchase-orders` | List or create purchase orders. |
-| `GET` / `POST` | `/api/suppliers` | List or create suppliers. |
-| `GET` | `/api/scanner?sku=` | Look up a product by SKU for the scanner. |
-| `GET` | `/api/suggestions` | Pending reorder suggestions. |
-| `GET` | `/api/notifications` | Low-stock and suggestion alerts, plus subscriber counts. |
-| `POST` | `/api/notifications/subscribe` | Save a push subscription. |
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` / `POST` | `/api/products` | List / create products |
+| `PUT` / `DELETE` | `/api/products/[id]` | Update / delete product |
+| `GET` / `POST` | `/api/sales` | List / record sales (deducts stock) |
+| `GET` / `POST` | `/api/purchase-orders` | List / create purchase orders |
+| `PATCH` / `DELETE` | `/api/purchase-orders/[id]` | Update status / delete order |
+| `GET` / `POST` | `/api/suppliers` | List / create suppliers |
+| `PUT` / `DELETE` | `/api/suppliers/[id]` | Update / delete supplier |
+| `GET` | `/api/scanner?sku=` | Look up product by SKU |
+| `GET` / `POST` | `/api/suggestions` | List / create reorder suggestions |
+| `GET` | `/api/forecast?horizon=` | Demand forecast per product |
+| `GET` | `/api/notifications` | Low-stock + suggestion alerts |
+| `POST` | `/api/notifications/subscribe` | Save push subscription |
+| `GET` / `PATCH` | `/api/user` | Read / update current profile |
+| `GET` / `POST` | `/api/compositions` | Product compositions (DB + API only) |
 
 ---
 
 ## Roadmap
 
 ### Coming next
-- **Purchase orders page.** Create and track orders with line items and a draft to sent to received flow.
-- **Suggestions page.** A place to review reorder suggestions and turn them into purchase orders.
-- **Barcode labels.** Generate and print SKU labels with `jsbarcode`.
+- **Suggestions page** — review reorder suggestions and turn them into purchase orders
+- **Barcode labels** — generate/print SKU labels with `jsbarcode`
 
 ### Planned
-- **Sales forecasting.** Project the next 30 days from real sales history. The dashboard already has a placeholder for this.
-- **Teams and roles.** Move beyond a single user with teams, roles, and permissions.
-- **Deeper analytics.** Margins, stock turnover, dead stock, and custom date ranges.
-- **Bulk tools.** CSV import plus bulk price and stock updates.
-- **Audit log.** A history of stock movements, edits, and sales.
+- **Teams & roles** — beyond single user
+- **Deeper analytics** — margins, turnover, dead stock, custom ranges
+- **Bulk tools** — CSV import, bulk price/stock updates
+- **Audit log** — stock movement history
 
 ### Maybe later
-- Multi-currency and tax support.
-- Dark mode.
+- Dark mode
 
 ---
 

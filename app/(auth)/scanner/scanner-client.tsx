@@ -32,7 +32,7 @@ export default function ScannerPageClient() {
 
   return (
     <PageShell title={t("scanner.title")}>
-      <div className="mx-auto mt-5 w-full max-w-2xl flex-1">
+      <div className="mx-auto mt-5 w-full max-w-2xl">
         <div className="flex flex-col rounded-3xl border border-white/60 bg-[#d8eff9] p-5 shadow-xs sm:p-6">
           <div className="mb-4 flex items-center gap-2.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00a2be]/15 text-[#00a2be]">

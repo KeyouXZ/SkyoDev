@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s | NIRAGA",
   },
   description:
-    "NIRAGA Stock & Inventory AI — manage products, stock levels, sales, and reorder suggestions in one place.",
+    "NIRAGA Stock & Inventory — manage products, stock levels, sales, and reorder suggestions in one place.",
 };
 
 export const viewport: Viewport = {

@@ -20,6 +20,7 @@ export default function SellPageClient() {
     setQuantity,
     submitting,
     productsLoading,
+    salesLoading,
     sales,
     results,
     total,
@@ -36,7 +37,7 @@ export default function SellPageClient() {
         onTabChangeAction={setTab}
       />
 
-      <div className="mx-auto mt-5 w-full max-w-2xl flex-1">
+      <div className="mx-auto mt-5 w-full max-w-2xl">
         {tab === "record" ? (
           <RecordSale
             productsLoading={productsLoading}
@@ -54,7 +55,7 @@ export default function SellPageClient() {
             onRecordAction={handleRecordSale}
           />
         ) : (
-          <RecentSales sales={sales} />
+          <RecentSales sales={sales} loading={salesLoading} />
         )}
       </div>
     </PageShell>

@@ -57,7 +57,7 @@ export function Navigation({ sidebarOpen, setSidebarOpen }: NavigationProps) {
       <aside
         className={`
       fixed top-3 bottom-3 z-50
-      lg:static lg:top-auto lg:bottom-auto lg:left-auto
+      lg:sticky lg:top-3 lg:bottom-auto lg:left-auto lg:h-[calc(100vh-24px)] lg:self-start sm:lg:h-[calc(100vh-40px)]
       w-60 sm:w-64 bg-[#00a2be] text-white
       rounded-3xl shadow-lg flex flex-col justify-between py-6 px-4
       transition-transform duration-300 ease-in-out
@@ -113,9 +113,7 @@ export function Navigation({ sidebarOpen, setSidebarOpen }: NavigationProps) {
 
         {/* Sidebar Footer */}
         <div className="border-t border-white/15 px-2 pt-6 text-xs text-white/70">
-          <p className="font-semibold text-white/90">
-            Stock &amp; Inventory AI
-          </p>
+          <p className="font-semibold text-white/90">Stock &amp; Inventory</p>
           <p className="mt-0.5 text-xs text-white/60">v{version} • NIRAGA</p>
         </div>
       </aside>

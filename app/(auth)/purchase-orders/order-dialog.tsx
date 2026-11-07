@@ -5,8 +5,10 @@ import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import type { ProductWithSupplier, SupplierSummary } from "@/types/inventory";
 import type { DraftItem } from "./types";
-import { OrderItemRow } from "./order-item-row";
-import { ProductSearch } from "./product-search";
+import { OrderSupplierField } from "./order-supplier-field";
+import { OrderItemsField } from "./order-items-field";
+import { OrderNotesField } from "./order-notes-field";
+import { OrderStatusField } from "./order-status-field";
 import { usePreferences } from "@/context/PreferencesContext";
 import { formatCurrency } from "@/lib/format";
 
@@ -124,95 +126,23 @@ export function OrderDialog({
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-          {/* Supplier */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t("purchaseOrders.supplier")}
-            </label>
-            <select
-              value={supplier}
-              onChange={(e) => setSupplier(e.target.value)}
-              className="w-full cursor-pointer appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-xs outline-none transition-all focus:border-[#00a2be] focus:ring-2 focus:ring-[#00a2be]/20"
-            >
-              <option value="">{t("purchaseOrders.selectSupplier")}</option>
-              {suppliers.map((s) => (
-                <option key={s.id} value={s.name}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-            {suppliers.length === 0 && (
-              <p className="mt-1.5 text-xs text-gray-400">
-                {t("purchaseOrders.noSuppliers")}
-              </p>
-            )}
-          </div>
-
-          {/* Items */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t("purchaseOrders.items")}
-            </label>
-            <ProductSearch
-              search={search}
-              onSearchChangeAction={setSearch}
-              results={results}
-              onAddItemAction={addItem}
-            />
-
-            {items.length > 0 && (
-              <div className="mt-2 space-y-2">
-                {items.map((i) => (
-                  <OrderItemRow
-                    key={i.productId}
-                    item={i}
-                    product={products.find((x) => x.id === i.productId)}
-                    onQtyChangeAction={setQty}
-                    onRemoveAction={removeItem}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t("purchaseOrders.notes")}{" "}
-              <span className="text-gray-400">
-                {t("purchaseOrders.optional")}
-              </span>
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              placeholder={t("purchaseOrders.notesPlaceholder")}
-              className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-xs outline-none placeholder:text-gray-400 focus:border-[#00a2be] focus:ring-2 focus:ring-[#00a2be]/20"
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t("purchaseOrders.status")}
-            </label>
-            <div className="flex gap-2">
-              {(["draft", "sent"] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatus(s)}
-                  className={`flex-1 cursor-pointer rounded-xl px-3 py-2 text-sm font-semibold capitalize transition-all ${
-                    status === s
-                      ? "bg-[#00a2be] text-white shadow-sm"
-                      : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {t(`purchaseOrders.${s}`)}
-                </button>
-              ))}
-            </div>
-          </div>
+          <OrderSupplierField
+            supplier={supplier}
+            suppliers={suppliers}
+            onSupplierChangeAction={setSupplier}
+          />
+          <OrderItemsField
+            search={search}
+            results={results}
+            items={items}
+            products={products}
+            onSearchChangeAction={setSearch}
+            onAddItemAction={addItem}
+            onQtyChangeAction={setQty}
+            onRemoveAction={removeItem}
+          />
+          <OrderNotesField notes={notes} onNotesChangeAction={setNotes} />
+          <OrderStatusField status={status} onStatusChangeAction={setStatus} />
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-5 py-4">

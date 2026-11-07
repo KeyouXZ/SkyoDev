@@ -3,7 +3,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Sales Forecast - NIRAGA",
   description:
-    "NIRAGA Sales Forecast — AI-powered demand predictions to plan reorders with confidence.",
+    "NIRAGA Sales Forecast — demand predictions to plan reorders with confidence.",
 };
 
 export default function ForecastLayout({

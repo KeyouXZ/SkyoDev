@@ -23,7 +23,7 @@ export function usePurchaseOrders() {
     status: OrderStatus;
   } | null>(null);
 
-  const { data: orders = [], mutate: mutateOrders } = useOrders();
+  const { data: orders = [], mutate: mutateOrders, isLoading } = useOrders();
   const { data: products = [] } = useProducts();
   const { data: suppliers = [] } = useSuppliers();
 
@@ -113,6 +113,7 @@ export function usePurchaseOrders() {
     setFilter,
     dialogOpen,
     setDialogOpen,
+    isLoading,
     busyAction,
     pendingDelete,
     setPendingDelete,

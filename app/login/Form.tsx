@@ -96,7 +96,7 @@ export default function AuthPage() {
             NIRAGA
           </h1>
           <p className="mt-1.5 text-sm text-gray-500 font-medium">
-            Stock &amp; Inventory AI Platform
+            Stock &amp; Inventory Platform
           </p>
         </div>
 
@@ -358,7 +358,7 @@ export default function AuthPage() {
 
         {/* Footer */}
         <p className="mt-6 text-center text-xs text-gray-400 select-none">
-          v{version} • NIRAGA • Stock &amp; Inventory AI
+          v{version} • NIRAGA • Stock &amp; Inventory
         </p>
       </div>
     </div>

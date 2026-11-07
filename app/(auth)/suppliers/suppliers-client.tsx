@@ -20,6 +20,7 @@ export default function SuppliersPageClient() {
     busyId,
     pendingDelete,
     setPendingDelete,
+    isLoading,
     filtered,
     openCreate,
     openEdit,
@@ -36,7 +37,36 @@ export default function SuppliersPageClient() {
       />
 
       {/* Suppliers grid */}
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+          {Array(6)
+            .fill(0)
+            .map((_, i) => (
+              <div
+                key={i}
+                className="animate-pulse rounded-2xl border border-white/60 bg-white p-4 shadow-sm sm:p-5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="h-11 w-11 shrink-0 rounded-xl bg-slate-200" />
+                    <div>
+                      <div className="h-4 w-28 rounded-full bg-slate-200" />
+                      <div className="mt-2 h-3 w-20 rounded-full bg-slate-200" />
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <div className="h-8 w-8 rounded-full bg-slate-200" />
+                    <div className="h-8 w-8 rounded-full bg-slate-200" />
+                  </div>
+                </div>
+                <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                  <div className="h-3.5 w-full rounded-full bg-slate-200" />
+                  <div className="h-3.5 w-2/3 rounded-full bg-slate-200" />
+                </div>
+              </div>
+            ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-white/60 bg-white/60 px-4 py-16 text-center shadow-sm">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00a2be]/10 text-[#00a2be]">
             <Building2 className="h-7 w-7" />

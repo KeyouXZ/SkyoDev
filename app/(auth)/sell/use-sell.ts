@@ -18,7 +18,11 @@ export function useSell() {
   const [submitting, setSubmitting] = useState(false);
 
   const { data: products = [], isLoading: productsLoading } = useProducts();
-  const { data: allSales = [], mutate: mutateSales } = useSales();
+  const {
+    data: allSales = [],
+    mutate: mutateSales,
+    isLoading: salesLoading,
+  } = useSales();
   const sales = useMemo(() => allSales.slice(0, 30), [allSales]);
 
   const selected = useMemo(
@@ -100,6 +104,7 @@ export function useSell() {
     setQuantity,
     submitting,
     productsLoading,
+    salesLoading,
     sales,
     results,
     total,

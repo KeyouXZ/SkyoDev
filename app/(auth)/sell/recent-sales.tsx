@@ -7,7 +7,13 @@ import type { SaleRecord } from "./types";
 
 export type { SaleRecord } from "./types";
 
-export function RecentSales({ sales }: { sales: SaleRecord[] }) {
+export function RecentSales({
+  sales,
+  loading = false,
+}: {
+  sales: SaleRecord[];
+  loading?: boolean;
+}) {
   const { t, currency, locale } = usePreferences();
   return (
     <div className="flex flex-col rounded-3xl border border-white/60 bg-[#d8eff9] p-5 shadow-xs sm:p-6">
@@ -26,7 +32,23 @@ export function RecentSales({ sales }: { sales: SaleRecord[] }) {
       </div>
 
       <div className="space-y-2.5">
-        {sales.length === 0 ? (
+        {loading ? (
+          Array(5)
+            .fill(0)
+            .map((_, i) => (
+              <div
+                key={i}
+                className="flex animate-pulse items-center gap-3 rounded-2xl border border-white/70 bg-white px-3.5 py-3 shadow-sm sm:px-4"
+              >
+                <div className="h-9 w-9 shrink-0 rounded-xl bg-slate-200" />
+                <div className="min-w-0 flex-1">
+                  <div className="h-4 w-3/4 rounded-full bg-slate-200" />
+                  <div className="mt-2 h-3 w-1/2 rounded-full bg-slate-200" />
+                </div>
+                <div className="h-4 w-16 shrink-0 rounded-full bg-slate-200" />
+              </div>
+            ))
+        ) : sales.length === 0 ? (
           <div className="rounded-2xl border border-white/70 bg-white/50 p-8 text-center text-sm text-gray-400">
             {t("sell.noSales")}
           </div>
