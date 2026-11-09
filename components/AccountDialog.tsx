@@ -73,10 +73,10 @@ export function AccountDialog({ open, onCloseAction }: AccountDialogProps) {
       if (!res.ok) {
         throw new Error(data?.error ?? t("inventory.failedToSave"));
       }
-      toast.success(t("inventory.productUpdated"));
+      toast.success(t("header.accountUpdated"));
       onCloseAction();
     } catch (err) {
-      toast.error(t("inventory.couldNotSave"), {
+      toast.error(t("header.couldNotSaveAccount"), {
         description:
           err instanceof Error
             ? err.message

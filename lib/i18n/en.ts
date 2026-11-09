@@ -31,6 +31,8 @@ export const en = {
     toggleMenu: "Toggle Menu",
     firstName: "First Name",
     lastName: "Last Name",
+    accountUpdated: "Account updated",
+    couldNotSaveAccount: "Could not save account",
   },
   notifications: {
     title: "Notifications",

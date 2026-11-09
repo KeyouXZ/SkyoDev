@@ -33,6 +33,8 @@ export const id: Dict = {
     toggleMenu: "Buka Menu",
     firstName: "Nama Depan",
     lastName: "Nama Belakang",
+    accountUpdated: "Akun diperbarui",
+    couldNotSaveAccount: "Tidak dapat menyimpan akun",
   },
   notifications: {
     title: "Notifikasi",
